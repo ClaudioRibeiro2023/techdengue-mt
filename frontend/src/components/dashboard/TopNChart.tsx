@@ -94,7 +94,7 @@ const TopNChart: React.FC<TopNChartProps> = ({ data }) => {
           label: function(context: TooltipItem<'bar'>) {
             const item = data.ranking[context.dataIndex];
             const lines = [
-              `${data.tipo_indicador}: ${context.parsed.x.toLocaleString('pt-BR', { maximumFractionDigits: 2 })} ${data.unidade}`,
+              `${data.tipo_indicador}: ${(context.parsed.x || 0).toLocaleString('pt-BR', { maximumFractionDigits: 2 })} ${data.unidade}`,
             ];
             
             if (item.percentual) {
