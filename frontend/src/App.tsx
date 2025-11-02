@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider } from '@/contexts/AuthContext'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import MainLayout from '@/components/layout/MainLayout'
+import { UserRole } from '@/config/auth'
 
 // Auth Pages
 import LoginPage from '@/pages/LoginPage'
@@ -11,6 +12,9 @@ import SilentRenewPage from '@/pages/auth/SilentRenewPage'
 // Protected Pages
 import HomePage from '@/pages/HomePage'
 import ProfilePage from '@/pages/ProfilePage'
+
+// Check if demo mode is enabled
+const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true'
 
 // Placeholder pages for other modules (to be implemented)
 function MapaPage() {
@@ -27,63 +31,76 @@ function RelatoriosPage() {
 }
 
 export default function App() {
+  // Wrapper component for demo mode
+  const RouteWrapper = ({ children }: { children: React.ReactNode }) => {
+    return DEMO_MODE ? <>{children}</> : <ProtectedRoute>{children}</ProtectedRoute>
+  }
+
+  const RoleRouteWrapper = ({ children, roles }: { children: React.ReactNode; roles?: UserRole[] }) => {
+    return DEMO_MODE ? <>{children}</> : <ProtectedRoute requiredRoles={roles}>{children}</ProtectedRoute>
+  }
+
   return (
     <BrowserRouter>
       <AuthProvider>
         <Routes>
           {/* Public Routes */}
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/auth/callback" element={<CallbackPage />} />
-          <Route path="/auth/silent-renew" element={<SilentRenewPage />} />
+          {!DEMO_MODE && (
+            <>
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/auth/callback" element={<CallbackPage />} />
+              <Route path="/auth/silent-renew" element={<SilentRenewPage />} />
+            </>
+          )}
 
           {/* Protected Routes */}
           <Route element={<MainLayout />}>
             <Route
               path="/"
               element={
-                <ProtectedRoute>
+                <RouteWrapper>
                   <HomePage />
-                </ProtectedRoute>
+                </RouteWrapper>
               }
             />
             <Route
               path="/profile"
               element={
-                <ProtectedRoute>
+                <RouteWrapper>
                   <ProfilePage />
-                </ProtectedRoute>
+                </RouteWrapper>
               }
             />
             <Route
               path="/mapa"
               element={
-                <ProtectedRoute>
+                <RouteWrapper>
                   <MapaPage />
-                </ProtectedRoute>
+                </RouteWrapper>
               }
             />
             <Route
               path="/dashboard"
               element={
-                <ProtectedRoute>
+                <RouteWrapper>
                   <DashboardPage />
-                </ProtectedRoute>
+                </RouteWrapper>
               }
             />
             <Route
               path="/etl"
               element={
-                <ProtectedRoute requiredRoles={['ADMIN', 'GESTOR']}>
+                <RoleRouteWrapper roles={['ADMIN', 'GESTOR']}>
                   <ETLPage />
-                </ProtectedRoute>
+                </RoleRouteWrapper>
               }
             />
             <Route
               path="/relatorios"
               element={
-                <ProtectedRoute>
+                <RouteWrapper>
                   <RelatoriosPage />
-                </ProtectedRoute>
+                </RouteWrapper>
               }
             />
           </Route>
