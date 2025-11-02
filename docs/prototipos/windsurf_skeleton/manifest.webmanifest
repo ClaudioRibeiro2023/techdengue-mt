@@ -1,0 +1,9 @@
+{
+  "name": "TechDengue Web",
+  "short_name": "TD Web",
+  "start_url": "/mapa",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#00A8E8",
+  "icons": []
+}

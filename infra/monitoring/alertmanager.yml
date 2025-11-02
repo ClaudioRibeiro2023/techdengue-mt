@@ -1,0 +1,105 @@
+global:
+  resolve_timeout: 5m
+  smtp_from: 'alertmanager@techdengue.mt.gov.br'
+  smtp_smarthost: 'smtp.gmail.com:587'
+  smtp_auth_username: 'alerts@techdengue.mt.gov.br'
+  smtp_auth_password: '${SMTP_PASSWORD}'
+
+# Templates
+templates:
+  - '/etc/alertmanager/templates/*.tmpl'
+
+# Route tree
+route:
+  group_by: ['alertname', 'cluster', 'service']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 12h
+  receiver: 'default'
+  
+  routes:
+    # Critical alerts - immediate notification
+    - match:
+        severity: critical
+      receiver: 'critical-alerts'
+      repeat_interval: 4h
+      continue: true
+    
+    # Warning alerts
+    - match:
+        severity: warning
+      receiver: 'warning-alerts'
+      repeat_interval: 12h
+    
+    # Database alerts
+    - match:
+        team: infra
+      receiver: 'infra-team'
+    
+    # Backend alerts
+    - match:
+        team: backend
+      receiver: 'backend-team'
+
+# Receivers
+receivers:
+  - name: 'default'
+    email_configs:
+      - to: 'techdengue-alerts@mt.gov.br'
+        send_resolved: true
+
+  - name: 'critical-alerts'
+    email_configs:
+      - to: 'techdengue-critical@mt.gov.br'
+        send_resolved: true
+        headers:
+          Priority: 'Urgent'
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL}'
+        channel: '#alerts-critical'
+        title: '🚨 Critical Alert'
+        text: |
+          *Alert:* {{ .GroupLabels.alertname }}
+          *Severity:* {{ .CommonLabels.severity }}
+          *Summary:* {{ .CommonAnnotations.summary }}
+          *Description:* {{ .CommonAnnotations.description }}
+        send_resolved: true
+
+  - name: 'warning-alerts'
+    email_configs:
+      - to: 'techdengue-warnings@mt.gov.br'
+        send_resolved: true
+    slack_configs:
+      - api_url: '${SLACK_WEBHOOK_URL}'
+        channel: '#alerts-warning'
+        title: '⚠️ Warning Alert'
+        text: |
+          *Alert:* {{ .GroupLabels.alertname }}
+          *Summary:* {{ .CommonAnnotations.summary }}
+        send_resolved: true
+
+  - name: 'infra-team'
+    email_configs:
+      - to: 'infra@techdengue.mt.gov.br'
+        send_resolved: true
+
+  - name: 'backend-team'
+    email_configs:
+      - to: 'backend@techdengue.mt.gov.br'
+        send_resolved: true
+
+# Inhibition rules
+inhibit_rules:
+  # Inhibit warning if critical is firing
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'instance']
+
+  # Inhibit any alerts if APIDown is firing
+  - source_match:
+      alertname: 'APIDown'
+    target_match_re:
+      alertname: '.*'
+    equal: ['job']

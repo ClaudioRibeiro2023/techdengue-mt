@@ -1,0 +1,53 @@
+### TechDengue API v1 — HTTPie/VSCode REST
+
+@base = http://localhost:8080/v1
+@token = REPLACE_ME
+Authorization: Bearer {{token}}
+
+### /auth/me
+GET {{base}}/auth/me
+
+### Upload ETL
+POST {{base}}/etl/epi/upload
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data
+
+### Qualidade
+GET {{base}}/etl/epi/qualidade/CARGA123
+
+### Indicadores
+GET {{base}}/indicadores?municipio_cod_ibge=3106200&competencia=2025-09-30
+
+### Criar atividade
+POST {{base}}/atividades
+Content-Type: application/json
+
+{
+  "municipio_cod_ibge": "3106200",
+  "status": "CRIADA"
+}
+
+### Presign evidência
+POST {{base}}/evidencias/presign
+Content-Type: application/json
+
+{
+  "atividade_id": "UUID_ATV",
+  "filename": "foto.jpg",
+  "contentType": "image/jpeg"
+}
+
+### Registrar evidência
+POST {{base}}/evidencias
+Content-Type: application/json
+
+{
+  "atividade_id": "UUID_ATV",
+  "uri": "s3://.../foto.jpg",
+  "hash_sha256": "sha256:...",
+  "tipo": "FOTO",
+  "capturado_em": "2025-10-31T10:00:00-03:00"
+}
+
+### Relatório EPI01
+GET {{base}}/relatorios/epi01?municipio_cod_ibge=3106200&competencia=2025-09-30&formato=pdf

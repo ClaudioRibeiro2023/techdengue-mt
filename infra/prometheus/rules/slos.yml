@@ -1,0 +1,147 @@
+groups:
+  - name: slo_alerts
+    interval: 30s
+    rules:
+      # ========================================================================
+      # SLO: API Latency (p95 ≤ 4s)
+      # ========================================================================
+      
+      - record: api:request_duration_seconds:p95
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, endpoint))
+      
+      - alert: SLOLatencyViolation
+        expr: api:request_duration_seconds:p95 > 4
+        for: 5m
+        labels:
+          severity: warning
+          slo: latency
+        annotations:
+          summary: "SLO Latency violated (p95 > 4s)"
+          description: "Endpoint {{ $labels.endpoint }} has p95 latency of {{ $value }}s (SLO: ≤4s)"
+          runbook_url: "https://docs.techdengue.mt.gov.br/runbooks/slo-latency"
+      
+      # ========================================================================
+      # SLO: Dashboard Load Time (p95 ≤ 4s)
+      # ========================================================================
+      
+      - record: dashboard:load_time_seconds:p95
+        expr: histogram_quantile(0.95, sum(rate(dashboard_load_duration_seconds_bucket[5m])) by (le))
+      
+      - alert: SLODashboardLoadTimeViolation
+        expr: dashboard:load_time_seconds:p95 > 4
+        for: 5m
+        labels:
+          severity: warning
+          slo: dashboard_load
+        annotations:
+          summary: "Dashboard load time SLO violated (p95 > 4s)"
+          description: "Dashboard p95 load time is {{ $value }}s (SLO: ≤4s)"
+          runbook_url: "https://docs.techdengue.mt.gov.br/runbooks/slo-dashboard"
+      
+      # ========================================================================
+      # SLO: Mapa APIs (p95 ≤ 4s)
+      # ========================================================================
+      
+      - record: mapa:request_duration_seconds:p95
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{endpoint=~"/api/mapa/.*"}[5m])) by (le, endpoint))
+      
+      - alert: SLOMapaLatencyViolation
+        expr: mapa:request_duration_seconds:p95 > 4
+        for: 5m
+        labels:
+          severity: warning
+          slo: mapa_latency
+        annotations:
+          summary: "Mapa API latency SLO violated (p95 > 4s)"
+          description: "Mapa endpoint {{ $labels.endpoint }} has p95 latency of {{ $value }}s (SLO: ≤4s)"
+          runbook_url: "https://docs.techdengue.mt.gov.br/runbooks/slo-mapa"
+      
+      # ========================================================================
+      # SLO: Availability (99.9% uptime)
+      # ========================================================================
+      
+      - record: api:availability:5m
+        expr: sum(rate(http_requests_total{status!~"5.."}[5m])) / sum(rate(http_requests_total[5m]))
+      
+      - alert: SLOAvailabilityViolation
+        expr: api:availability:5m < 0.999
+        for: 5m
+        labels:
+          severity: critical
+          slo: availability
+        annotations:
+          summary: "API availability SLO violated (< 99.9%)"
+          description: "API availability is {{ $value | humanizePercentage }} (SLO: ≥99.9%)"
+          runbook_url: "https://docs.techdengue.mt.gov.br/runbooks/slo-availability"
+      
+      # ========================================================================
+      # SLO: Error Rate (< 1%)
+      # ========================================================================
+      
+      - record: api:error_rate:5m
+        expr: sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total[5m]))
+      
+      - alert: SLOErrorRateViolation
+        expr: api:error_rate:5m > 0.01
+        for: 5m
+        labels:
+          severity: warning
+          slo: error_rate
+        annotations:
+          summary: "Error rate SLO violated (> 1%)"
+          description: "API error rate is {{ $value | humanizePercentage }} (SLO: <1%)"
+          runbook_url: "https://docs.techdengue.mt.gov.br/runbooks/slo-error-rate"
+      
+      # ========================================================================
+      # SLO: ETL Job Success Rate (> 95%)
+      # ========================================================================
+      
+      - record: etl:job_success_rate:1h
+        expr: sum(rate(etl_jobs_total{status="COMPLETED"}[1h])) / sum(rate(etl_jobs_total[1h]))
+      
+      - alert: SLOETLSuccessRateViolation
+        expr: etl:job_success_rate:1h < 0.95
+        for: 15m
+        labels:
+          severity: warning
+          slo: etl_success_rate
+        annotations:
+          summary: "ETL job success rate SLO violated (< 95%)"
+          description: "ETL success rate is {{ $value | humanizePercentage }} (SLO: ≥95%)"
+          runbook_url: "https://docs.techdengue.mt.gov.br/runbooks/slo-etl"
+      
+      # ========================================================================
+      # SLO: Database Query Latency (p95 ≤ 1s)
+      # ========================================================================
+      
+      - record: db:query_duration_seconds:p95
+        expr: histogram_quantile(0.95, sum(rate(db_query_duration_seconds_bucket[5m])) by (le, query_type))
+      
+      - alert: SLODatabaseQueryLatencyViolation
+        expr: db:query_duration_seconds:p95 > 1
+        for: 5m
+        labels:
+          severity: warning
+          slo: db_latency
+        annotations:
+          summary: "Database query latency SLO violated (p95 > 1s)"
+          description: "Query type {{ $labels.query_type }} has p95 latency of {{ $value }}s (SLO: ≤1s)"
+          runbook_url: "https://docs.techdengue.mt.gov.br/runbooks/slo-database"
+      
+      # ========================================================================
+      # SLI: Request Rate (para capacidade)
+      # ========================================================================
+      
+      - record: api:request_rate:1m
+        expr: sum(rate(http_requests_total[1m]))
+      
+      - alert: HighRequestRate
+        expr: api:request_rate:1m > 1000
+        for: 5m
+        labels:
+          severity: info
+          slo: capacity
+        annotations:
+          summary: "High API request rate (> 1000 req/s)"
+          description: "API receiving {{ $value }} requests/second"
+          runbook_url: "https://docs.techdengue.mt.gov.br/runbooks/capacity"

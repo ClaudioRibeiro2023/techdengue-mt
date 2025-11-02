@@ -1,0 +1,6 @@
+dt_notificacao;dt_sintomas;municipio_cod_ibge;sexo;idade;gestante;classificacao_final;criterio_confirmacao;febre;cefaleia;dor_retroocular;mialgia;artralgia;exantema;vomito;nausea;dor_abdominal;plaquetas_baixas;hemorragia;hepatomegalia;acumulo_liquidos;diabetes;hipertensao;evolucao;dt_obito;dt_encerramento
+2024-01-15;2024-01-13;5103403;F;28;N;DENGUE;LABORATORIAL;1;1;1;1;1;0;0;0;0;0;0;0;0;0;0;CURA;;2024-01-30
+2024-01-16;2024-01-14;5103403;M;45;;DENGUE;CLINICO_EPIDEMIOLOGICO;1;1;0;1;1;1;0;0;0;0;0;0;0;1;1;CURA;;2024-01-31
+2024-01-17;2024-01-15;5103403;F;35;8;DENGUE_SINAIS_ALARME;LABORATORIAL;1;1;1;1;1;1;1;1;1;1;0;1;0;0;0;CURA;;2024-02-01
+2024-01-18;2024-01-16;5105606;M;62;;DENGUE_GRAVE;LABORATORIAL;1;1;1;1;1;1;1;1;1;1;1;1;1;1;1;OBITO;2024-01-25;2024-01-26
+2024-01-19;2024-01-17;5105606;F;19;2;DESCARTADO;LABORATORIAL;1;0;0;0;0;0;0;0;0;0;0;0;0;0;0;CURA;;2024-02-02

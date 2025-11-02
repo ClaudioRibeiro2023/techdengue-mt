@@ -1,0 +1,170 @@
+{
+  "timestamp": "2025-11-02T10:38:23.878375",
+  "tests": {
+    "infrastructure": [
+      {
+        "name": "db",
+        "passed": true,
+        "details": "Porta 5432 acess\u00edvel"
+      },
+      {
+        "name": "keycloak",
+        "passed": true,
+        "details": "Porta 8080 acess\u00edvel"
+      },
+      {
+        "name": "minio",
+        "passed": true,
+        "details": "Porta 9000 acess\u00edvel"
+      },
+      {
+        "name": "prism",
+        "passed": true,
+        "details": "Porta 4010 acess\u00edvel"
+      },
+      {
+        "name": "epi-api",
+        "passed": true,
+        "details": "Porta 8000 acess\u00edvel"
+      },
+      {
+        "name": "campo-api",
+        "passed": true,
+        "details": "Porta 8001 acess\u00edvel"
+      },
+      {
+        "name": "relatorios-api",
+        "passed": true,
+        "details": "Porta 8002 acess\u00edvel"
+      }
+    ],
+    "database": [
+      {
+        "name": "table_atividade",
+        "passed": true,
+        "details": ""
+      },
+      {
+        "name": "table_audit_log",
+        "passed": true,
+        "details": ""
+      },
+      {
+        "name": "table_evidencia",
+        "passed": true,
+        "details": ""
+      },
+      {
+        "name": "table_indicador_epi",
+        "passed": true,
+        "details": ""
+      },
+      {
+        "name": "table_relatorio",
+        "passed": true,
+        "details": ""
+      },
+      {
+        "name": "migration_V1",
+        "passed": true,
+        "details": ""
+      },
+      {
+        "name": "migration_V2",
+        "passed": true,
+        "details": ""
+      },
+      {
+        "name": "migration_V3",
+        "passed": true,
+        "details": ""
+      },
+      {
+        "name": "migration_V4",
+        "passed": true,
+        "details": ""
+      },
+      {
+        "name": "hypertable_indicador_epi",
+        "passed": true,
+        "details": ""
+      }
+    ],
+    "keycloak": [
+      {
+        "name": "discovery",
+        "passed": true,
+        "details": "http://localhost:8080/realms/techdengue"
+      },
+      {
+        "name": "roles",
+        "passed": true,
+        "details": "CAMPO, VIGILANCIA, GESTOR, ADMIN"
+      }
+    ],
+    "observability": [
+      {
+        "name": "epi-api_health",
+        "passed": true,
+        "details": ""
+      },
+      {
+        "name": "epi-api_request_id",
+        "passed": true,
+        "details": ""
+      },
+      {
+        "name": "epi-api_metrics",
+        "passed": true,
+        "details": "4/4"
+      },
+      {
+        "name": "campo-api_health",
+        "passed": true,
+        "details": ""
+      },
+      {
+        "name": "campo-api_request_id",
+        "passed": true,
+        "details": ""
+      },
+      {
+        "name": "campo-api_metrics",
+        "passed": true,
+        "details": "4/4"
+      },
+      {
+        "name": "relatorios-api_health",
+        "passed": true,
+        "details": ""
+      },
+      {
+        "name": "relatorios-api_request_id",
+        "passed": true,
+        "details": ""
+      },
+      {
+        "name": "relatorios-api_metrics",
+        "passed": true,
+        "details": "4/4"
+      }
+    ],
+    "prism": [
+      {
+        "name": "auth_validation",
+        "passed": true,
+        "details": ""
+      },
+      {
+        "name": "mock_response",
+        "passed": true,
+        "details": ""
+      }
+    ]
+  },
+  "summary": {
+    "total": 30,
+    "passed": 30,
+    "failed": 0
+  }
+}

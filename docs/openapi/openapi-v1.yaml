@@ -1,0 +1,676 @@
+openapi: 3.0.3
+info:
+  title: TechDengue — API v1
+  version: 1.0.0
+  description: |
+    API **Edital-Core++** para indicadores EPI, operação de campo, evidências e relatórios.
+    Segurança via **OAuth2/OIDC** (Bearer JWT). Todas as rotas v1 retornam `application/json`
+    por padrão, exceto downloads (PDF/CSV).
+
+servers:
+  - url: https://api.techdengue.local/v1
+    description: Ambiente de homologação (exemplo)
+  - url: http://localhost:8080/v1
+    description: Local dev
+
+tags:
+  - name: Auth
+  - name: ETL
+  - name: Indicadores
+  - name: Campo
+  - name: Evidencias
+  - name: Relatorios
+  - name: Exports
+  - name: Admin
+  - name: Denuncias
+  - name: Social Listening
+  - name: Drone
+  - name: Webhooks
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    MunicipioIBGE:
+      in: query
+      name: municipio_cod_ibge
+      schema: { type: string, pattern: "^[0-9]{7}$" }
+      required: true
+      description: Código IBGE do município (7 dígitos).
+    Competencia:
+      in: query
+      name: competencia
+      schema: { type: string, format: date }
+      required: true
+      description: Data da competência (usar último dia do mês).
+  responses:
+    Unauthorized:
+      description: Token ausente ou inválido
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Forbidden:
+      description: Sem permissão para o recurso solicitado
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+  schemas:
+    Error:
+      type: object
+      properties:
+        error: { type: string }
+        message: { type: string }
+        requestId: { type: string }
+    IndicadorEpi:
+      type: object
+      properties:
+        municipio_cod_ibge: { type: string }
+        municipio_nome: { type: string }
+        competencia: { type: string, format: date }
+        populacao: { type: integer }
+        casos: { type: integer }
+        incidencia_100k: { type: number }
+        ipo: { type: number }
+        ido: { type: number }
+        ivo: { type: number }
+        imo: { type: number }
+        fonte: { type: string }
+        versao_indicador: { type: string }
+        calc_at: { type: string, format: date-time }
+    Atividade:
+      type: object
+      required: [municipio_cod_ibge, status]
+      properties:
+        id: { type: string, format: uuid }
+        origem: { type: string, enum: [DENUNCIA, PLANO, ALERTA] }
+        municipio_cod_ibge: { type: string }
+        bairro: { type: string }
+        equipe: { type: string }
+        sla_deadline: { type: string, format: date-time }
+        status: { type: string, enum: [CRIADA, EM_ANDAMENTO, ENCERRADA] }
+        criado_em: { type: string, format: date-time }
+        atualizado_em: { type: string, format: date-time }
+    Evidencia:
+      type: object
+      required: [atividade_id, uri, hash_sha256, tipo, capturado_em]
+      properties:
+        id: { type: string, format: uuid }
+        atividade_id: { type: string, format: uuid }
+        uri: { type: string, description: "Presigned URL (S3) ou caminho relativo" }
+        hash_sha256: { type: string }
+        lat: { type: number }
+        lon: { type: number }
+        tipo: { type: string, enum: [FOTO, VIDEO] }
+        capturado_em: { type: string, format: date-time }
+        criado_em: { type: string, format: date-time }
+    RelatorioLinks:
+      type: object
+      properties:
+        pdf_url: { type: string }
+        csv_url: { type: string }
+        hash_sha256: { type: string }
+    UploadInfo:
+      type: object
+      properties:
+        carga_id: { type: string }
+        status: { type: string, enum: [RECEBIDO, VALIDANDO, ERRO, CARREGADO] }
+        qualidade_url: { type: string }
+        created_at: { type: string, format: date-time }
+    QualidadeEtl:
+      type: object
+      properties:
+        carga_id: { type: string }
+        erros: { type: array, items: { type: string } }
+        avisos: { type: array, items: { type: string } }
+        linhas_afetadas: { type: integer }
+        percentual_cobertura: { type: number }
+        detalhes_url: { type: string }
+
+paths:
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Retorna informações do usuário autenticado
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: string }
+                  email: { type: string }
+                  nome: { type: string }
+                  papel: { type: string }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /etl/epi/upload:
+    post:
+      tags: [ETL]
+      summary: Upload de indicadores epidemiológicos (CSV/planilha)
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                arquivo:
+                  type: string
+                  format: binary
+      responses:
+        "202":
+          description: Recebido e enfileirado para validação/carga
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UploadInfo" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /etl/epi/qualidade/{carga_id}:
+    get:
+      tags: [ETL]
+      summary: Consulta relatório de qualidade da carga
+      parameters:
+        - in: path
+          name: carga_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/QualidadeEtl" }
+        "404":
+          description: Carga não encontrada
+
+  /indicadores:
+    get:
+      tags: [Indicadores]
+      summary: Lista indicadores por município e competência
+      parameters:
+        - $ref: "#/components/parameters/MunicipioIBGE"
+        - $ref: "#/components/parameters/Competencia"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/IndicadorEpi" }
+
+  /atividades:
+    get:
+      tags: [Campo]
+      summary: Lista atividades
+      parameters:
+        - in: query
+          name: status
+          schema: { type: string, enum: [CRIADA, EM_ANDAMENTO, ENCERRADA] }
+        - in: query
+          name: municipio_cod_ibge
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Atividade" }
+    post:
+      tags: [Campo]
+      summary: Cria atividade
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Atividade" }
+      responses:
+        "201":
+          description: Criado
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Atividade" }
+
+  /atividades/{id}:
+    get:
+      tags: [Campo]
+      summary: Detalhe de atividade
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Atividade" }
+        "404": { description: Não encontrado }
+    patch:
+      tags: [Campo]
+      summary: Atualiza parcialmente uma atividade
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Atividade" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Atividade" }
+
+  /evidencias/presign:
+    post:
+      tags: [Evidencias]
+      summary: Gera URL pré-assinada para upload de mídia
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                atividade_id: { type: string, format: uuid }
+                filename: { type: string }
+                contentType: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  upload_url: { type: string }
+                  final_uri: { type: string }
+
+  /evidencias:
+    post:
+      tags: [Evidencias]
+      summary: Registra metadados de evidência já enviada ao storage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Evidencia" }
+      responses:
+        "201":
+          description: Criado
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Evidencia" }
+
+  /relatorios/epi01:
+    get:
+      tags: [Relatorios]
+      summary: Gera/retorna links para EPI01 (PDF/CSV)
+      parameters:
+        - $ref: "#/components/parameters/MunicipioIBGE"
+        - $ref: "#/components/parameters/Competencia"
+        - in: query
+          name: formato
+          schema: { type: string, enum: [pdf, csv] }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RelatorioLinks" }
+
+  /relatorios/evd01:
+    get:
+      tags: [Relatorios]
+      summary: Links para EVD01 (atividade)
+      parameters:
+        - in: query
+          name: atividade_id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RelatorioLinks" }
+
+  /relatorios/op01:
+    get:
+      tags: [Relatorios]
+      summary: Links para OP01 (operacional mensal)
+      parameters:
+        - $ref: "#/components/parameters/Competencia"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RelatorioLinks" }
+
+  /exports/atividades.geojson:
+    get:
+      tags: [Exports]
+      summary: Exporta atividades em GeoJSON (com DLP/RBAC)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/geo+json:
+              schema:
+                type: object
+
+  /admin/usuarios:
+    get:
+      tags: [Admin]
+      summary: Lista usuários
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id: { type: string, format: uuid }
+                    email: { type: string }
+                    nome: { type: string }
+                    papel: { type: string }
+                    territorio_scope: { type: string }
+    post:
+      tags: [Admin]
+      summary: Cria usuário
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, nome, papel]
+              properties:
+                email: { type: string }
+                nome: { type: string }
+                papel: { type: string, enum: [GESTOR, VIGILANCIA, CAMPO, ADMIN] }
+                territorio_scope: { type: string }
+      responses:
+        "201":
+          description: Criado
+
+  /denuncias:
+    post:
+      tags: [Denuncias]
+      summary: Cria denúncia de foco (origem canal público/chatbot)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tipo_foco, descricao]
+              properties:
+                tipo_foco: { type: string, enum: [CAIXA_DAGUA, PNEU, LIXO, OUTRO] }
+                descricao: { type: string }
+                endereco: { type: string }
+                lat: { type: number }
+                lon: { type: number }
+                foto_url: { type: string, description: "URL presigned da foto (se anexada)" }
+      responses:
+        "201":
+          description: Criado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: string, format: uuid }
+                  protocolo: { type: string }
+                  atividade_id: { type: string, format: uuid, description: "Atividade gerada (triagem automática)" }
+    get:
+      tags: [Denuncias]
+      summary: Lista denúncias
+      parameters:
+        - in: query
+          name: status
+          schema: { type: string, enum: [PENDENTE, EM_ANALISE, CONVERTIDA_EM_ATIVIDADE, ARQUIVADA] }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /denuncias/{id}:
+    get:
+      tags: [Denuncias]
+      summary: Detalhe de denúncia
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /etl/sinan/import:
+    post:
+      tags: [ETL]
+      summary: Import CSV SINAN Arboviroses (PoC - dataset de exemplo)
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                arquivo: { type: string, format: binary }
+      responses:
+        "202":
+          description: Recebido e enfileirado
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UploadInfo" }
+
+  /etl/liraa/import:
+    post:
+      tags: [ETL]
+      summary: Import CSV LIRAa (IIP/IBR) (PoC - dataset de exemplo)
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                arquivo: { type: string, format: binary }
+      responses:
+        "202":
+          description: Recebido e enfileirado
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UploadInfo" }
+
+  /social-listening/alerts:
+    get:
+      tags: [Social Listening]
+      summary: Lista alertas gerados por IA (posts negativos + localização)
+      parameters:
+        - in: query
+          name: municipio_cod_ibge
+          schema: { type: string }
+        - in: query
+          name: data_inicio
+          schema: { type: string, format: date }
+        - in: query
+          name: data_fim
+          schema: { type: string, format: date }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id: { type: string, format: uuid }
+                    texto: { type: string }
+                    sentimento: { type: string, enum: [NEGATIVO, NEUTRO, POSITIVO] }
+                    localizacao_mencionada: { type: string }
+                    municipio_cod_ibge: { type: string }
+                    palavras_chave: { type: array, items: { type: string } }
+                    atividade_id: { type: string, format: uuid, description: "Atividade gerada (se alerta crítico)" }
+                    criado_em: { type: string, format: date-time }
+
+  /social-listening/dashboard:
+    get:
+      tags: [Social Listening]
+      summary: Dashboard de Social Listening (métricas, mapa de calor, top hashtags)
+      parameters:
+        - in: query
+          name: data_inicio
+          schema: { type: string, format: date }
+        - in: query
+          name: data_fim
+          schema: { type: string, format: date }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total_posts: { type: integer }
+                  total_alertas: { type: integer }
+                  distribuicao_sentimento: { type: object }
+                  top_hashtags: { type: array, items: { type: string } }
+                  mapa_calor: { type: array, items: { type: object } }
+
+  /voo/missoes:
+    post:
+      tags: [Drone]
+      summary: Cria missão de voo (planejamento VANTs)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nome, area_geojson, altitude, padrao_voo]
+              properties:
+                nome: { type: string }
+                area_geojson: { type: object, description: "Polígono GeoJSON da área de tratamento" }
+                altitude: { type: number, description: "Altitude de voo (metros)" }
+                padrao_voo: { type: string, enum: [GRID, SERPENTINA] }
+                velocidade: { type: number, description: "Velocidade (m/s)" }
+                taxa_dispersao: { type: number, description: "Taxa de dispersão larvicida (L/ha)" }
+      responses:
+        "201":
+          description: Criado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: string, format: uuid }
+                  nome: { type: string }
+                  area_ha: { type: number }
+                  autonomia_estimada: { type: number, description: "Minutos" }
+                  insumo_estimado: { type: number, description: "Litros larvicida" }
+                  waypoints_count: { type: integer }
+    get:
+      tags: [Drone]
+      summary: Lista missões de voo
+      parameters:
+        - in: query
+          name: status
+          schema: { type: string, enum: [PLANEJADA, EM_VOO, CONCLUIDA, CANCELADA] }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /voo/missoes/{id}:
+    get:
+      tags: [Drone]
+      summary: Detalhe de missão
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /voo/missoes/{id}/rota.kml:
+    get:
+      tags: [Drone]
+      summary: Download de rota KML (waypoints para controlador drone)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/vnd.google-earth.kml+xml:
+              schema:
+                type: string
+                format: binary
+
+  /webhooks/subscribe:
+    post:
+      tags: [Webhooks]
+      summary: Registra um assinante de eventos
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [url, escopo]
+              properties:
+                url: { type: string }
+                escopo: { type: string, enum: [atividade.created, atividade.closed, etl.ok] }
+      responses:
+        "201": { description: Criado }

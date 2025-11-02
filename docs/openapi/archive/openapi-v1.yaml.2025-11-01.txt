@@ -1,0 +1,330 @@
+openapi: 3.0.3
+info:
+  title: TechDengue - Edital-Core++ API
+  version: 1.0.0
+  description: >
+    Contratos estáveis para Edital-Core++ (EPI, Campo, Relatórios) e stubs de expansão (analytics, rotas, drone).
+servers:
+  - url: https://api.homolog.techdengue.com/v1
+security:
+  - OAuth2: [epi.read, epi.write, campo.read, campo.write, admin]
+
+components:
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://idp/auth
+          tokenUrl: https://idp/token
+          scopes:
+            epi.read: Leitura epidemiológica
+            epi.write: Escrita epidemiológica
+            campo.read: Leitura operações de campo
+            campo.write: Escrita operações de campo
+            admin: Administração
+  schemas:
+    IndicadorEpi:
+      type: object
+      required: [municipio_cod_ibge, competencia, populacao, casos, incidencia_100k]
+      properties:
+        municipio_cod_ibge: { type: string, example: "3106200" }
+        municipio_nome: { type: string, example: "Belo Horizonte" }
+        competencia: { type: string, format: date, example: "2025-09-30" }
+        populacao: { type: integer, example: 2500000 }
+        casos: { type: integer, example: 345 }
+        incidencia_100k: { type: number, format: float, example: 137.5 }
+        ipo: { type: number, format: float, nullable: true }
+        ido: { type: number, format: float, nullable: true }
+        ivo: { type: number, format: float, nullable: true }
+        imo: { type: number, format: float, nullable: true }
+        fonte: { type: string, example: "SIVEP-ARBOVIROSES" }
+        versao_indicador: { type: string, example: "1.0.0" }
+    Atividade:
+      type: object
+      required: [id, municipio_cod_ibge, status]
+      properties:
+        id: { type: string, format: uuid }
+        origem: { type: string, example: "DENUNCIA|PLANO|ALERTA" }
+        municipio_cod_ibge: { type: string }
+        bairro: { type: string, nullable: true }
+        equipe: { type: string, nullable: true }
+        sla_deadline: { type: string, format: date-time, nullable: true }
+        status: { type: string, enum: [CRIADA, EM_ANDAMENTO, ENCERRADA] }
+        criado_em: { type: string, format: date-time }
+        atualizado_em: { type: string, format: date-time }
+    Evidencia:
+      type: object
+      required: [id, atividade_id, uri, hash_sha256, capturado_em]
+      properties:
+        id: { type: string, format: uuid }
+        atividade_id: { type: string, format: uuid }
+        uri: { type: string, example: "s3://evidencias/..." }
+        hash_sha256: { type: string, example: "sha256:..." }
+        lat: { type: number, format: float, nullable: true }
+        lon: { type: number, format: float, nullable: true }
+        tipo: { type: string, enum: [FOTO, VIDEO] }
+        capturado_em: { type: string, format: date-time }
+    RelatorioLink:
+      type: object
+      properties:
+        pdf_url: { type: string }
+        csv_url: { type: string, nullable: true }
+        hash_sha256: { type: string }
+
+paths:
+  /etl/epi/upload:
+    post:
+      tags: [ETL]
+      summary: Upload de indicadores epidemiológicos (planilha/CSV)
+      security: [{ OAuth2: [epi.write] }]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                arquivo:
+                  type: string
+                  format: binary
+      responses:
+        "202":
+          description: Aceito para processamento
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  carga_id: { type: string, format: uuid }
+                  status: { type: string, example: "PROCESSANDO" }
+
+  /etl/epi/qualidade/{carga_id}:
+    get:
+      tags: [ETL]
+      summary: Relatório de qualidade da carga
+      security: [{ OAuth2: [epi.read] }]
+      parameters:
+        - in: path
+          name: carga_id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  erros: { type: integer }
+                  avisos: { type: integer }
+                  relatorio_url: { type: string }
+
+  /indicadores:
+    get:
+      tags: [EPI]
+      summary: Consulta indicadores por município e período
+      security: [{ OAuth2: [epi.read] }]
+      parameters:
+        - in: query
+          name: municipio_cod_ibge
+          schema: { type: string }
+        - in: query
+          name: inicio
+          schema: { type: string, format: date }
+        - in: query
+          name: fim
+          schema: { type: string, format: date }
+      responses:
+        "200":
+          description: Lista de indicadores
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/IndicadorEpi" }
+
+  /atividades:
+    post:
+      tags: [Campo]
+      summary: Criar atividade
+      security: [{ OAuth2: [campo.write] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Atividade"
+      responses:
+        "201":
+          description: Criada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Atividade"
+    get:
+      tags: [Campo]
+      summary: Listar atividades
+      security: [{ OAuth2: [campo.read] }]
+      parameters:
+        - in: query
+          name: status
+          schema: { type: string }
+        - in: query
+          name: equipe
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Atividade" }
+
+  /atividades/{id}:
+    patch:
+      tags: [Campo]
+      summary: Atualizar status/atributos da atividade
+      security: [{ OAuth2: [campo.write] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Atividade" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Atividade" }
+
+  /atividades/{id}/evidencias:
+    post:
+      tags: [Campo]
+      summary: Anexar evidência à atividade
+      security: [{ OAuth2: [campo.write] }]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [arquivo, hash_sha256, capturado_em]
+              properties:
+                arquivo: { type: string, format: binary }
+                hash_sha256: { type: string }
+                lat: { type: number, format: float, nullable: true }
+                lon: { type: number, format: float, nullable: true }
+                tipo: { type: string, enum: [FOTO, VIDEO] }
+                capturado_em: { type: string, format: date-time }
+    get:
+      tags: [Campo]
+      summary: Listar evidências da atividade
+      security: [{ OAuth2: [campo.read] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Evidencia" }
+
+  /relatorios/epi01:
+    get:
+      tags: [Relatorios]
+      summary: Baixar relatório epidemiológico
+      security: [{ OAuth2: [epi.read] }]
+      parameters:
+        - in: query
+          name: municipio_cod_ibge
+          schema: { type: string }
+        - in: query
+          name: competencia
+          schema: { type: string, format: date }
+        - in: query
+          name: formato
+          schema: { type: string, enum: [pdf, csv], default: pdf }
+      responses:
+        "200":
+          description: Link(s) para download
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RelatorioLink" }
+
+  /relatorios/evd01:
+    get:
+      tags: [Relatorios]
+      summary: Baixar relatório técnico de evidência
+      security: [{ OAuth2: [campo.read] }]
+      parameters:
+        - in: query
+          name: atividade_id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Link PDF
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/RelatorioLink" }
+
+  /exports/atividades.geojson:
+    get:
+      tags: [Exports]
+      summary: Export GeoJSON de atividades (RBAC/DLP)
+      security: [{ OAuth2: [campo.read] }]
+      parameters:
+        - in: query
+          name: municipio_cod_ibge
+          schema: { type: string }
+        - in: query
+          name: periodo_inicio
+          schema: { type: string, format: date }
+        - in: query
+          name: periodo_fim
+          schema: { type: string, format: date }
+      responses:
+        "200":
+          description: GeoJSON
+          content:
+            application/geo+json:
+              schema:
+                type: object
+
+  # Stubs de expansão (501)
+  /analytics/forecast:
+    get:
+      tags: [Analytics]
+      summary: (Stub) Forecast de casos
+      responses:
+        "501":
+          description: Não implementado nesta fase
+
+  /rotas/sugestoes:
+    get:
+      tags: [Rotas]
+      summary: (Stub) Sugestões de roteirização
+      responses:
+        "501":
+          description: Não implementado nesta fase
+
+  /voo/missoes:
+    post:
+      tags: [Drone]
+      summary: (Stub) Criar missão de voo
+      responses:
+        "501":
+          description: Não implementado nesta fase

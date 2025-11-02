@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#0ea5e9"/>
+  <g fill="white">
+    <!-- Mosquito simplified icon -->
+    <ellipse cx="256" cy="180" rx="40" ry="60" opacity="0.9"/>
+    <ellipse cx="256" cy="280" rx="50" ry="80" opacity="0.9"/>
+    <path d="M 206 160 Q 180 140 160 120 M 306 160 Q 332 140 352 120" stroke="white" stroke-width="8" fill="none"/>
+    <path d="M 206 200 Q 170 190 140 180 M 306 200 Q 342 190 372 180" stroke="white" stroke-width="8" fill="none"/>
+    <path d="M 220 320 Q 200 380 190 420 M 292 320 Q 312 380 322 420" stroke="white" stroke-width="10" fill="none"/>
+    <circle cx="246" cy="165" r="6" fill="#0ea5e9"/>
+    <circle cx="266" cy="165" r="6" fill="#0ea5e9"/>
+  </g>
+  <text x="256" y="450" font-family="Arial, sans-serif" font-size="48" font-weight="bold" text-anchor="middle" fill="white">TechDengue</text>
+</svg>

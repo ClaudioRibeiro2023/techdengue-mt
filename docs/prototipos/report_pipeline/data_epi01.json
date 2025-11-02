@@ -1,0 +1,21 @@
+{
+  "report_code": "RPT-EPI01",
+  "versao": "1.0.0",
+  "build_id": "build-2025-10-31",
+  "hash_sha256": "sha256:DEMOHASH",
+  "municipio_nome": "Belo Horizonte",
+  "urs_nome": "Belo Horizonte",
+  "competencia": "2025-09-30",
+  "generated_at": "2025-10-31 10:30",
+  "responsavel": "Equipe Vigilância",
+  "referencias": "SIVEP-Arboviroses; TechDengue",
+  "incidencia_100k": 13.8,
+  "casos": 345,
+  "populacao": 2500000,
+  "ipo": 1.2,
+  "ido": 0.8,
+  "ivo": 0.5,
+  "imo": 0.3,
+  "fonte": "SIVEP-Arboviroses",
+  "versao_indicador": "1.0.0"
+}

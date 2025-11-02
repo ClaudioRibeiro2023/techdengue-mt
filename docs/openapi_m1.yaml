@@ -1,0 +1,708 @@
+openapi: 3.0.3
+info:
+  title: TechDengue M1 API
+  version: 1.0.0
+  description: |
+    API para vigilância epidemiológica de dengue em Mato Grosso.
+    
+    **M1 - Mapa Vivo, ETL EPI e Relatórios**
+    
+    Funcionalidades:
+    - Upload e validação de dados epidemiológicos (CSV-EPI01)
+    - Visualização de mapas com incidência e clustering
+    - Geração de relatórios PDF/A-1 com hash SHA-256
+    - Exportação de dados em CSV
+    
+  contact:
+    name: TechDengue Team
+    email: suporte@techdengue.mt.gov.br
+  license:
+    name: Proprietary
+    
+servers:
+  - url: http://localhost:8000/api
+    description: EPI API - Development
+  - url: http://localhost:8002/api
+    description: Relatórios API - Development
+  - url: https://api.techdengue.mt.gov.br/api
+    description: Production
+
+tags:
+  - name: ETL
+    description: Upload e validação de dados epidemiológicos
+  - name: Mapa
+    description: Camadas de mapa com indicadores geoespaciais
+  - name: Relatórios
+    description: Geração de relatórios PDF/A-1 e CSV
+  - name: Health
+    description: Health checks e métricas
+
+security:
+  - bearerAuth: []
+
+paths:
+  /etl/epi/upload:
+    post:
+      tags:
+        - ETL
+      summary: Upload de CSV EPI01
+      description: |
+        Realiza upload de arquivo CSV no formato EPI01 com validação completa.
+        
+        **Validações aplicadas:**
+        - Estrutura: colunas obrigatórias, separador `;`, UTF-8
+        - Códigos IBGE: 7 dígitos, prefixo 51 (MT)
+        - Datas: não futuras, sintomas ≤ notificação
+        - Enums: valores permitidos para classificação, critério, evolução
+        - Validações cruzadas: óbito → dt_obito, gestante → sexo/idade
+        
+        **Critério de aprovação:** Taxa de qualidade ≥ 95%
+        
+      operationId: uploadEPI
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+                - competencia
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Arquivo CSV (separador `;`, UTF-8)
+                competencia:
+                  type: string
+                  pattern: '^\d{6}$'
+                  example: "202401"
+                  description: Competência YYYYMM
+                sobrescrever:
+                  type: boolean
+                  default: false
+                  description: Se true, substitui dados existentes
+      responses:
+        '200':
+          description: Upload bem-sucedido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ETLUploadResponse'
+        '400':
+          description: Validação falhou (taxa < 95%)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Parâmetros inválidos
+        '500':
+          description: Erro no processamento
+      
+  /etl/epi/competencias:
+    get:
+      tags:
+        - ETL
+      summary: Lista competências carregadas
+      description: Retorna lista de competências (YYYYMM) com dados no banco
+      operationId: listCompetencias
+      responses:
+        '200':
+          description: Lista de competências
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  competencias:
+                    type: array
+                    items:
+                      type: string
+                      pattern: '^\d{6}$'
+                  total:
+                    type: integer
+                    
+  /etl/epi/competencias/{competencia}/stats:
+    get:
+      tags:
+        - ETL
+      summary: Estatísticas de competência
+      description: Retorna estatísticas agregadas para uma competência específica
+      operationId: getCompetenciaStats
+      parameters:
+        - name: competencia
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^\d{6}$'
+          example: "202401"
+      responses:
+        '200':
+          description: Estatísticas da competência
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompetenciaStats'
+                
+  /mapa/camadas:
+    get:
+      tags:
+        - Mapa
+      summary: Obter camadas do mapa
+      description: |
+        Retorna camadas do mapa em formato GeoJSON para visualização.
+        
+        **Tipos de camada:**
+        - `incidencia`: Incidência por 100k habitantes
+        - `ipo`: Índice de Positividade de Ovos (futuro)
+        - `ido`: Índice de Densidade de Ovos (futuro)
+        - `ivo`: Índice de Vigilância de Ovos (futuro)
+        - `imo`: Índice de Mosquitos por Ovitrampa (futuro)
+        
+        **Classificação de risco (Incidência):**
+        - Baixo (<100): Verde #4CAF50
+        - Médio (100-300): Amarelo #FFC107
+        - Alto (300-500): Laranja #FF9800
+        - Muito Alto (>500): Vermelho #F44336
+        
+      operationId: getMapaCamadas
+      parameters:
+        - name: tipo_camada
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [incidencia, ipo, ido, ivo, imo]
+          description: Tipo de camada a retornar
+        - name: competencia_inicio
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: '^\d{6}$'
+          example: "202401"
+        - name: competencia_fim
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: '^\d{6}$'
+          example: "202401"
+        - name: municipios
+          in: query
+          required: false
+          schema:
+            type: string
+          example: "5103403,5105606"
+          description: Códigos IBGE separados por vírgula
+        - name: cluster
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+          description: Aplicar clustering para reduzir features
+        - name: max_features
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50000
+            default: 10000
+          description: Limite de features retornadas
+      responses:
+        '200':
+          description: Camada do mapa em GeoJSON
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MapaCamadasResponse'
+        '400':
+          description: Parâmetros inválidos
+        '501':
+          description: Tipo de camada não implementado
+          
+  /mapa/municipios:
+    get:
+      tags:
+        - Mapa
+      summary: Lista municípios disponíveis
+      description: Retorna lista de municípios com código IBGE, nome, população e coordenadas
+      operationId: listMunicipios
+      responses:
+        '200':
+          description: Lista de municípios
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  municipios:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MunicipioInfo'
+                  total:
+                    type: integer
+                    
+  /relatorios/epi01:
+    get:
+      tags:
+        - Relatórios
+      summary: Gerar relatório EPI01
+      description: |
+        Gera relatório epidemiológico EPI01 em PDF/A-1 ou CSV.
+        
+        **PDF/A-1:**
+        - Formato: PDF/A-1 (padrão de arquivamento)
+        - Hash: SHA-256 do conteúdo completo
+        - Layout: Resumo geral + detalhamento por município
+        - Rodapé: Paginação e informações de geração
+        
+        **CSV:**
+        - Separador: `;` (ponto-e-vírgula)
+        - Encoding: UTF-8
+        - Campos: todos os indicadores por município
+        
+      operationId: generateEPI01
+      parameters:
+        - name: competencia_inicio
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: '^\d{6}$'
+          example: "202401"
+        - name: competencia_fim
+          in: query
+          required: true
+          schema:
+            type: string
+            pattern: '^\d{6}$'
+          example: "202401"
+        - name: municipios
+          in: query
+          required: false
+          schema:
+            type: string
+          example: "5103403,5105606"
+        - name: formato
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [pdf, csv]
+            default: pdf
+        - name: incluir_grafico
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: true
+          description: Incluir gráficos no PDF
+      responses:
+        '200':
+          description: Relatório gerado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RelatorioEPI01Response'
+        '400':
+          description: Parâmetros inválidos
+          
+  /relatorios/download/{filename}:
+    get:
+      tags:
+        - Relatórios
+      summary: Download de relatório
+      description: |
+        Realiza download de arquivo de relatório previamente gerado.
+        
+        **Segurança:**
+        - Path traversal bloqueado
+        - Apenas arquivos do diretório de relatórios
+        - Autenticação requerida
+        
+      operationId: downloadRelatorio
+      parameters:
+        - name: filename
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "epi01_202401_202401_20240215_103045.pdf"
+      responses:
+        '200':
+          description: Arquivo do relatório
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+            text/csv:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Arquivo não encontrado
+        '400':
+          description: Nome de arquivo inválido
+          
+  /relatorios/list:
+    get:
+      tags:
+        - Relatórios
+      summary: Lista relatórios disponíveis
+      description: Retorna lista de relatórios gerados e disponíveis para download
+      operationId: listRelatorios
+      parameters:
+        - name: formato
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [pdf, csv]
+          description: Filtrar por formato
+      responses:
+        '200':
+          description: Lista de relatórios
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  relatorios:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RelatorioListItem'
+                  total:
+                    type: integer
+                    
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      description: Verifica status da API
+      operationId: healthCheck
+      security: []
+      responses:
+        '200':
+          description: API saudável
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  service:
+                    type: string
+                    example: "epi-api"
+                  version:
+                    type: string
+                    example: "1.0.0"
+                    
+  /metrics:
+    get:
+      tags:
+        - Health
+      summary: Métricas Prometheus
+      description: Retorna métricas no formato Prometheus
+      operationId: getMetrics
+      security: []
+      responses:
+        '200':
+          description: Métricas Prometheus
+          content:
+            text/plain:
+              schema:
+                type: string
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token JWT obtido via Keycloak OIDC
+      
+  schemas:
+    ETLUploadResponse:
+      type: object
+      properties:
+        mensagem:
+          type: string
+          example: "Upload realizado com sucesso"
+        relatorio:
+          $ref: '#/components/schemas/ETLQualityReport'
+        casos_inseridos:
+          type: integer
+          example: 1234
+        competencia:
+          type: string
+          example: "202401"
+          
+    ETLQualityReport:
+      type: object
+      properties:
+        total_linhas:
+          type: integer
+        linhas_validas:
+          type: integer
+        linhas_com_erro:
+          type: integer
+        linhas_com_aviso:
+          type: integer
+        taxa_qualidade:
+          type: number
+          format: float
+          example: 98.5
+        periodo_dados:
+          type: object
+          properties:
+            dt_sintomas_min:
+              type: string
+              format: date
+            dt_sintomas_max:
+              type: string
+              format: date
+        municipios_unicos:
+          type: integer
+        casos_confirmados:
+          type: integer
+        total_obitos:
+          type: integer
+        erros:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationError'
+        aprovado:
+          type: boolean
+          
+    ValidationError:
+      type: object
+      properties:
+        linha:
+          type: integer
+        campo:
+          type: string
+        valor:
+          type: string
+        mensagem:
+          type: string
+        severidade:
+          type: string
+          enum: [erro, aviso]
+          
+    CompetenciaStats:
+      type: object
+      properties:
+        competencia:
+          type: string
+        total_casos:
+          type: integer
+        total_obitos:
+          type: integer
+        municipios:
+          type: integer
+        incidencia_media:
+          type: number
+          format: float
+          
+    MapaCamadasResponse:
+      type: object
+      properties:
+        tipo_camada:
+          type: string
+          enum: [incidencia, ipo, ido, ivo, imo]
+        competencia_inicio:
+          type: string
+        competencia_fim:
+          type: string
+        total_municipios:
+          type: integer
+        total_casos:
+          type: integer
+        total_obitos:
+          type: integer
+        incidencia_media:
+          type: number
+          format: float
+        data:
+          $ref: '#/components/schemas/GeoJSONFeatureCollection'
+        metadata:
+          type: object
+          additionalProperties: true
+          
+    GeoJSONFeatureCollection:
+      type: object
+      required:
+        - type
+        - features
+      properties:
+        type:
+          type: string
+          enum: [FeatureCollection]
+        features:
+          type: array
+          items:
+            $ref: '#/components/schemas/GeoJSONFeature'
+            
+    GeoJSONFeature:
+      type: object
+      required:
+        - type
+        - geometry
+        - properties
+      properties:
+        type:
+          type: string
+          enum: [Feature]
+        geometry:
+          $ref: '#/components/schemas/GeoJSONGeometry'
+        properties:
+          $ref: '#/components/schemas/MunicipioProperties'
+          
+    GeoJSONGeometry:
+      type: object
+      required:
+        - type
+        - coordinates
+      properties:
+        type:
+          type: string
+          enum: [Point]
+        coordinates:
+          type: array
+          items:
+            type: number
+          minItems: 2
+          maxItems: 2
+          example: [-56.0967, -15.6014]
+          
+    MunicipioProperties:
+      type: object
+      properties:
+        municipio_cod_ibge:
+          type: string
+          example: "5103403"
+        municipio_nome:
+          type: string
+          example: "Cuiabá"
+        populacao:
+          type: integer
+          example: 618124
+        casos:
+          type: integer
+          example: 1234
+        incidencia:
+          type: number
+          format: float
+          example: 199.65
+        obitos:
+          type: integer
+          example: 3
+        letalidade:
+          type: number
+          format: float
+          example: 0.24
+        classe_risco:
+          type: string
+          enum: [baixo, medio, alto, muito_alto]
+        cor_hex:
+          type: string
+          pattern: '^#[0-9A-Fa-f]{6}$'
+          example: "#FF6B6B"
+          
+    MunicipioInfo:
+      type: object
+      properties:
+        cod_ibge:
+          type: string
+          example: "5103403"
+        nome:
+          type: string
+          example: "Cuiabá"
+        populacao:
+          type: integer
+          example: 618124
+        centroid:
+          type: object
+          properties:
+            lat:
+              type: number
+              format: float
+              example: -15.6014
+            lon:
+              type: number
+              format: float
+              example: -56.0967
+              
+    RelatorioEPI01Response:
+      type: object
+      properties:
+        metadata:
+          $ref: '#/components/schemas/RelatorioMetadata'
+        arquivo:
+          type: string
+          example: "epi01_202401_202401_20240215_103045.pdf"
+        tamanho_bytes:
+          type: integer
+          example: 125467
+        url_download:
+          type: string
+          example: "/api/relatorios/download/epi01_202401_202401_20240215_103045.pdf"
+          
+    RelatorioMetadata:
+      type: object
+      properties:
+        competencia_inicio:
+          type: string
+        competencia_fim:
+          type: string
+        dt_geracao:
+          type: string
+          format: date-time
+        total_municipios:
+          type: integer
+        total_casos:
+          type: integer
+        total_obitos:
+          type: integer
+        incidencia_media:
+          type: number
+          format: float
+        hash_sha256:
+          type: string
+          minLength: 64
+          maxLength: 64
+          example: "a3f5d8c7e9b2f1a4..."
+        formato:
+          type: string
+          enum: [pdf, csv, json]
+          
+    RelatorioListItem:
+      type: object
+      properties:
+        arquivo:
+          type: string
+        tamanho_bytes:
+          type: integer
+        dt_criacao:
+          type: string
+          format: date-time
+          nullable: true
+        formato:
+          type: string
+          enum: [pdf, csv]
+          
+    ErrorResponse:
+      type: object
+      properties:
+        detail:
+          type: string
+          example: "Erro ao processar arquivo"

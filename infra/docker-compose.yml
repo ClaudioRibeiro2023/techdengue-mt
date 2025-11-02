@@ -1,0 +1,172 @@
+services:
+  # PostgreSQL + PostGIS + Timescale
+  db:
+    image: timescale/timescaledb-ha:pg15
+    environment:
+      POSTGRES_DB: techdengue
+      POSTGRES_USER: techdengue
+      POSTGRES_PASSWORD: techdengue
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U techdengue"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Flyway migrations
+  flyway:
+    image: flyway/flyway:9
+    command: migrate
+    volumes:
+      - ../db/flyway/migrations:/flyway/sql
+    environment:
+      FLYWAY_URL: jdbc:postgresql://db:5432/techdengue
+      FLYWAY_USER: techdengue
+      FLYWAY_PASSWORD: techdengue
+      FLYWAY_SCHEMAS: public
+      FLYWAY_BASELINE_ON_MIGRATE: true
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # MinIO (S3-compatible)
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  # MinIO setup (create buckets)
+  minio-make-etl:
+    image: minio/mc:latest
+    depends_on:
+      - minio
+    environment:
+      MC_HOST_minio: http://minioadmin:minioadmin@minio:9000
+    command: ["mb", "-p", "minio/techdengue-etl"]
+
+  minio-make-evidencias:
+    image: minio/mc:latest
+    depends_on:
+      - minio
+    environment:
+      MC_HOST_minio: http://minioadmin:minioadmin@minio:9000
+    command: ["mb", "-p", "minio/techdengue-evidencias"]
+
+  minio-make-relatorios:
+    image: minio/mc:latest
+    depends_on:
+      - minio
+    environment:
+      MC_HOST_minio: http://minioadmin:minioadmin@minio:9000
+    command: ["mb", "-p", "minio/techdengue-relatorios"]
+
+  # Keycloak (OIDC)
+  keycloak:
+    image: quay.io/keycloak/keycloak:23.0
+    command: start-dev
+    ports:
+      - "8080:8080"
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    # Using dev-file database (H2) in start-dev, no Postgres dependency
+
+  # EPI API
+  epi-api:
+    build: ../epi-api
+    ports:
+      - "8000:8000"
+    env_file:
+      - ../epi-api/.env
+    depends_on:
+      - db
+      - minio
+      - keycloak
+
+  # Redis (for Celery)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # Campo API
+  campo-api:
+    build: ../campo-api
+    ports:
+      - "8001:8001"
+    env_file:
+      - ../campo-api/.env
+    depends_on:
+      - db
+      - minio
+      - keycloak
+      - redis
+
+  # Celery Worker
+  campo-worker:
+    build: ../campo-api
+    command: celery -A app.celery_app worker --loglevel=info -Q cleanup,reports,notifications
+    env_file:
+      - ../campo-api/.env
+    depends_on:
+      - db
+      - redis
+      - minio
+
+  # Celery Beat (scheduler)
+  campo-beat:
+    build: ../campo-api
+    command: celery -A app.celery_app beat --loglevel=info
+    env_file:
+      - ../campo-api/.env
+    depends_on:
+      - redis
+
+  # Relatórios API
+  relatorios-api:
+    build: ../relatorios-api
+    ports:
+      - "8002:8002"
+    env_file:
+      - ../relatorios-api/.env
+    depends_on:
+      - db
+      - minio
+      - keycloak
+
+  # Prism (OpenAPI mock)
+  prism:
+    image: stoplight/prism:4
+    command: mock -h 0.0.0.0 /openapi/openapi-v1.yaml
+    ports:
+      - "4010:4010"
+    volumes:
+      - ../docs/openapi:/openapi
+
+volumes:
+  postgres_data:
+  minio_data:
+  redis_data:
