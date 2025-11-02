@@ -8,7 +8,8 @@ import {
   Title,
   Tooltip,
   Legend,
-  ChartOptions
+  ChartOptions,
+  TooltipItem
 } from 'chart.js';
 
 ChartJS.register(
@@ -90,7 +91,7 @@ const TopNChart: React.FC<TopNChartProps> = ({ data }) => {
       },
       tooltip: {
         callbacks: {
-          label: function(context) {
+          label: function(context: TooltipItem<'bar'>) {
             const item = data.ranking[context.dataIndex];
             const lines = [
               `${data.tipo_indicador}: ${context.parsed.x.toLocaleString('pt-BR', { maximumFractionDigits: 2 })} ${data.unidade}`,
@@ -113,8 +114,8 @@ const TopNChart: React.FC<TopNChartProps> = ({ data }) => {
       x: {
         beginAtZero: true,
         ticks: {
-          callback: function(value) {
-            return value.toLocaleString('pt-BR');
+          callback: function(value: string | number) {
+            return Number(value).toLocaleString('pt-BR');
           }
         },
         grid: {

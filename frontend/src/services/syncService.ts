@@ -135,8 +135,11 @@ class SyncService {
     if ('serviceWorker' in navigator && 'SyncManager' in window) {
       try {
         const registration = await navigator.serviceWorker.ready;
-        await registration.sync.register('sync-queue');
-        console.log('Background sync registered');
+        // Type guard for sync property
+        if ('sync' in registration) {
+          await (registration as any).sync.register('sync-queue');
+          console.log('Background sync registered');
+        }
       } catch (error) {
         console.error('Background sync registration failed:', error);
       }

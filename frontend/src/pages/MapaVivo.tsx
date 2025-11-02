@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, GeoJSON, Circle, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, GeoJSON, Circle } from 'react-leaflet';
 import { LatLngExpression } from 'leaflet';
 import axios from 'axios';
 import { getAuthHeader } from '../services/authService';

@@ -9,7 +9,8 @@ import {
   Title,
   Tooltip,
   Legend,
-  ChartOptions
+  ChartOptions,
+  TooltipItem
 } from 'chart.js';
 
 ChartJS.register(
@@ -89,7 +90,7 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({ data }) => {
         mode: 'index' as const,
         intersect: false,
         callbacks: {
-          label: function(context) {
+          label: function(context: TooltipItem<'line'>) {
             let label = context.dataset.label || '';
             if (label) {
               label += ': ';
@@ -106,8 +107,8 @@ const TimeSeriesChart: React.FC<TimeSeriesChartProps> = ({ data }) => {
       y: {
         beginAtZero: true,
         ticks: {
-          callback: function(value) {
-            return value.toLocaleString('pt-BR');
+          callback: function(value: string | number) {
+            return Number(value).toLocaleString('pt-BR');
           }
         },
         grid: {

@@ -329,8 +329,8 @@ class DBService {
     await this.put(STORES.EVIDENCIAS, evidencia);
   }
 
-  async getEvidencias(atividadeId?: string): Promise<unknown[]> {
-    // TODO: implementar filtro por index se atividadeId fornecido
+  async getEvidencias(_atividadeId?: string): Promise<unknown[]> {
+    // TODO: implementar filtro por index se _atividadeId fornecido
     return this.getAll(STORES.EVIDENCIAS);
   }
 
