@@ -1,44 +1,39 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { UserRole } from '@/config/auth'
-import { Map, BarChart3, Upload, FileText, TrendingUp, Users, AlertTriangle } from 'lucide-react'
+import { Map, BarChart3, Upload, FileText, TrendingUp, Users, AlertTriangle, type LucideIcon } from 'lucide-react'
+import { NAVIGATION } from '@/navigation/map'
 
 export default function HomePage() {
   const { user, hasRole } = useAuth()
 
   const userName = user?.profile?.name || (user?.profile as any)?.preferred_username || 'Usuário'
 
-  const features = [
-    {
-      name: 'Mapa Interativo',
-      description: 'Visualização geoespacial em tempo real',
-      icon: Map,
-      href: '/mapa',
-      color: 'bg-blue-500',
-    },
-    {
-      name: 'Dashboard',
-      description: 'Indicadores e métricas epidemiológicas',
-      icon: BarChart3,
-      href: '/dashboard',
-      color: 'bg-green-500',
-    },
-    {
-      name: 'ETL de Dados',
-      description: 'Importação e processamento de dados',
-      icon: Upload,
-      href: '/etl',
-      color: 'bg-purple-500',
-      requiresRole: 'ADMIN',
-    },
-    {
-      name: 'Relatórios',
-      description: 'Geração de relatórios e exportações',
-      icon: FileText,
-      href: '/relatorios',
-      color: 'bg-orange-500',
-    },
-  ]
+  const iconByModule: Record<string, LucideIcon> = {
+    'mapa-vivo': Map,
+    'dashboard-executivo': BarChart3,
+    'etl-integracao': Upload,
+    'relatorios': FileText,
+  }
+
+  const colorByModule: Record<string, string> = {
+    'mapa-vivo': 'bg-blue-500',
+    'dashboard-executivo': 'bg-green-500',
+    'etl-integracao': 'bg-purple-500',
+    'relatorios': 'bg-orange-500',
+  }
+
+  const features = NAVIGATION.modules
+    .filter(m => m.topNav)
+    .map(m => ({
+      id: m.id,
+      name: m.name,
+      description: m.description,
+      icon: iconByModule[m.id] || Map,
+      href: m.path,
+      color: colorByModule[m.id] || 'bg-slate-500',
+      requiresRole: m.id === 'etl-integracao' ? 'ADMIN' : undefined,
+    }))
 
   const stats = [
     { label: 'Casos Notificados', value: '1,234', icon: TrendingUp, change: '+12%' },

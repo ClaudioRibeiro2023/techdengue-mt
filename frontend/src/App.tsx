@@ -51,10 +51,6 @@ export default function App() {
           ]
         : []),
 
-      // e-Denúncia pública
-      { path: '/denuncia', element: <NovaDenunciaPage /> },
-      { path: '/denuncia/consultar/:protocolo', element: <ConsultarDenunciaPage /> },
-
       // Protected routes within MainLayout
       {
         element: <MainLayout />,
@@ -65,6 +61,9 @@ export default function App() {
           { path: '/dashboard', element: <RouteWrapper><DashboardEPI /></RouteWrapper> },
           { path: '/etl', element: <RoleRouteWrapper roles={['ADMIN', 'GESTOR']}><ETLPage /></RoleRouteWrapper> },
           { path: '/relatorios', element: <RouteWrapper><RelatoriosPage /></RouteWrapper> },
+          // e-Denúncia pública (sem wrapper de proteção)
+          { path: '/denuncia', element: <NovaDenunciaPage /> },
+          { path: '/denuncia/consultar/:protocolo', element: <ConsultarDenunciaPage /> },
         ],
       },
 

@@ -1,0 +1,50 @@
+import { Link, useLocation } from 'react-router-dom'
+import { useMemo } from 'react'
+import { NAVIGATION } from '@/navigation/map'
+import type { AppModule } from '@/navigation/types'
+
+function resolveActiveModule(pathname: string): AppModule | undefined {
+  const segs = pathname.split('/').filter(Boolean)
+  if (['mapa', 'dashboard', 'etl', 'relatorios', 'denuncia'].includes(segs[0])) {
+    const map: Record<string, string> = {
+      mapa: 'mapa-vivo',
+      dashboard: 'dashboard-executivo',
+      etl: 'etl-integracao',
+      relatorios: 'relatorios',
+      denuncia: 'e-denuncia',
+    }
+    return NAVIGATION.modules.find(m => m.id === map[segs[0]])
+  }
+  if (segs[0] === 'modulos' && segs[1]) {
+    return NAVIGATION.modules.find(m => m.id === segs[1])
+  }
+  return undefined
+}
+
+export default function ModuleTopbar() {
+  const { pathname } = useLocation()
+
+  const module = useMemo(() => resolveActiveModule(pathname), [pathname])
+
+  if (!module || !module.functions?.length) return null
+
+  return (
+    <div id="app-topbar" data-app-nav="tertiary" className="sticky top-0 z-20 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 border-b">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="h-12 flex items-center gap-2 overflow-x-auto no-scrollbar">
+          {module.functions.map(fn => (
+            <Link
+              key={fn.id}
+              to={fn.path.includes(':') ? '#' : fn.path}
+              className="px-3 py-1.5 rounded-md text-sm text-gray-700 hover:bg-gray-100 whitespace-nowrap"
+              title={fn.name}
+              onClick={e => fn.path.includes(':') && e.preventDefault()}
+            >
+              {fn.name}
+            </Link>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
