@@ -15,6 +15,8 @@ export type AppModule = {
   path: string
   topNav?: boolean
   icon?: string
+  badge?: string
+  group?: string
   functions?: FunctionItem[]
 }
 

@@ -43,15 +43,24 @@ function groupByCategory(items: FunctionItem[]) {
 }
 
 export default function ModuleSidebar() {
-  const { pathname } = useLocation()
+  const location = useLocation()
+  const { pathname, search } = location
 
   const module = useMemo(() => resolveActiveModule(pathname), [pathname])
   const groups = useMemo(() => groupByCategory(module?.functions || []), [module])
 
   const isActive = (path: string) => {
     if (path.includes(':')) return false
-    // Exact match or starts with path
-    return pathname === path || pathname.startsWith(path + '/')
+    // support query params matching
+    const [base, q] = path.split('?')
+    if (!(pathname === base || pathname.startsWith(base + '/'))) return false
+    if (!q) return true
+    const target = new URLSearchParams(q)
+    const current = new URLSearchParams(search)
+    for (const [k, v] of target.entries()) {
+      if (current.get(k) !== v) return false
+    }
+    return true
   }
 
   if (!module) return null

@@ -35,24 +35,7 @@ export default function Header() {
             </Link>
           </div>
 
-          {/* Desktop Navigation */}
-          {isAuthenticated && (
-            <nav className="hidden md:flex items-center gap-1">
-              {topModules.map((mod) => {
-                const Icon = iconByModule[mod.id] || Map
-                return (
-                  <Link
-                    key={mod.id}
-                    to={mod.path}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors"
-                  >
-                    <Icon className="w-4 h-4" />
-                    {mod.name}
-                  </Link>
-                )
-              })}
-            </nav>
-          )}
+          {/* Desktop Navigation removed: SIVEPI usa apenas sidebars */}
 
           {/* Right Side */}
           <div className="flex items-center gap-3">

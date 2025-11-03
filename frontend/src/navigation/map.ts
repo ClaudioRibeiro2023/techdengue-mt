@@ -9,6 +9,7 @@ export const NAVIGATION: NavigationMap = {
       path: '/mapa',
       topNav: true,
       icon: 'Map',
+      group: 'Web Mapas',
       functions: [
         { id: 'mapa-principal', name: 'Mapa Principal', path: '/mapa', category: 'MAPEAMENTO', icon: 'Map' },
         { id: 'mapa-calor', name: 'Mapa de Calor', path: '/mapa?view=heatmap', category: 'ANALISE', icon: 'Flame' },
@@ -23,6 +24,7 @@ export const NAVIGATION: NavigationMap = {
       path: '/dashboard',
       topNav: true,
       icon: 'LayoutDashboard',
+      group: 'Painéis',
       functions: [
         { id: 'visao-geral', name: 'Visão Geral', path: '/dashboard', category: 'INDICADORES', icon: 'Eye' },
       ],
@@ -34,6 +36,8 @@ export const NAVIGATION: NavigationMap = {
       path: '/etl',
       topNav: true,
       icon: 'Database',
+      badge: 'BETA',
+      group: 'Painéis',
       functions: [
         { id: 'etl-sinan', name: 'Importar SINAN', path: '/etl?src=sinan', category: 'OPERACIONAL', icon: 'Upload' },
         { id: 'etl-liraa', name: 'Importar LIRAa', path: '/etl?src=liraa', category: 'OPERACIONAL', icon: 'Upload' },
@@ -46,6 +50,7 @@ export const NAVIGATION: NavigationMap = {
       path: '/relatorios',
       topNav: true,
       icon: 'FileText',
+      group: 'Painéis',
       functions: [
         { id: 'epi01', name: 'EPI-01', path: '/relatorios?doc=epi01', category: 'INDICADORES', icon: 'FileSpreadsheet' },
       ],
@@ -56,6 +61,7 @@ export const NAVIGATION: NavigationMap = {
       description: 'Monitoramento de populações vetoriais',
       path: '/modulos/vigilancia-entomologica',
       icon: 'Bug',
+      group: 'Vigilância',
       functions: [
         { id: 'visao-geral-entomo', name: 'Visão Geral', path: '/modulos/vigilancia-entomologica?view=overview', category: 'ANALISE', icon: 'Eye' },
         { id: 'analise-sazonal', name: 'Análise Sazonal', path: '/modulos/vigilancia-entomologica?view=sazonal', category: 'ANALISE', icon: 'Calendar' },
@@ -70,6 +76,7 @@ export const NAVIGATION: NavigationMap = {
       description: 'Casos, incidência e hotspots',
       path: '/modulos/vigilancia-epidemiologica',
       icon: 'Activity',
+      group: 'Vigilância',
       functions: [
         { id: 'visao-geral-epi', name: 'Visão Geral', path: '/modulos/vigilancia-epidemiologica?view=overview', category: 'ANALISE', icon: 'Eye' },
         { id: 'series-temporais', name: 'Séries Temporais', path: '/modulos/vigilancia-epidemiologica?view=temporal', category: 'ANALISE', icon: 'LineChart' },
@@ -83,7 +90,8 @@ export const NAVIGATION: NavigationMap = {
       name: 'e‑Denúncia',
       description: 'Participação social e atividades',
       path: '/denuncia',
-      icon: 'MessageSquareWarning',
+      icon: 'MessageSquare',
+      group: 'Vigilância',
       functions: [
         { id: 'nova-denuncia', name: 'Nova Denúncia', path: '/denuncia', category: 'OPERACIONAL', icon: 'Plus' },
         { id: 'consultar-protocolo', name: 'Consultar Protocolo', path: '/denuncia/consultar/:protocolo', category: 'OPERACIONAL', icon: 'Search' },
@@ -96,6 +104,7 @@ export const NAVIGATION: NavigationMap = {
       description: 'Triagem, despacho e execução em campo',
       path: '/modulos/resposta-operacional',
       icon: 'Truck',
+      group: 'Operações',
       functions: [
         { id: 'triagem', name: 'Triagem & Despacho', path: '/modulos/resposta-operacional?view=triagem', category: 'OPERACIONAL', icon: 'ClipboardList' },
         { id: 'planejamento', name: 'Planejamento de Campo', path: '/modulos/resposta-operacional?view=planejamento', category: 'OPERACIONAL', icon: 'Calendar' },
@@ -109,6 +118,8 @@ export const NAVIGATION: NavigationMap = {
       description: 'Nowcasting, Rt e cenários',
       path: '/modulos/previsao-simulacao',
       icon: 'Brain',
+      badge: 'IA',
+      group: 'Painéis',
       functions: [
         { id: 'nowcasting', name: 'Nowcasting / Rt', path: '/modulos/previsao-simulacao?view=nowcasting', category: 'ANALISE', icon: 'Zap' },
         { id: 'previsao', name: 'Previsão 2–4 semanas', path: '/modulos/previsao-simulacao?view=forecast', category: 'ANALISE', icon: 'TrendingUp' },
@@ -121,6 +132,7 @@ export const NAVIGATION: NavigationMap = {
       description: 'Usuários, perfis e parâmetros',
       path: '/modulos/administracao',
       icon: 'Settings',
+      group: 'Sistema',
       functions: [
         { id: 'usuarios', name: 'Usuários e Perfis', path: '/modulos/administracao?view=usuarios', category: 'CONTROLE', icon: 'Users' },
         { id: 'parametros', name: 'Parâmetros', path: '/modulos/administracao?view=parametros', category: 'CONTROLE', icon: 'Sliders' },
@@ -133,6 +145,8 @@ export const NAVIGATION: NavigationMap = {
       description: 'Métricas, logs e saúde',
       path: '/modulos/observabilidade',
       icon: 'BarChart3',
+      badge: 'DEV',
+      group: 'Sistema',
       functions: [
         { id: 'metricas', name: 'Métricas', path: '/modulos/observabilidade?view=metricas', category: 'CONTROLE', icon: 'Activity' },
         { id: 'logs', name: 'Logs', path: '/modulos/observabilidade?view=logs', category: 'CONTROLE', icon: 'FileText' },
