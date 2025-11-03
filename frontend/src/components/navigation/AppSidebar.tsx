@@ -34,12 +34,27 @@ export default function AppSidebar() {
     return groups
   }, [filtered])
 
+  const GROUP_ORDER = ['Web Mapas', 'Dados', 'Vigilância', 'Operações', 'Serviços Técnicos', 'Sistema', 'Outros']
+  const orderedGroupEntries = useMemo(() => {
+    const entries = Object.entries(grouped)
+    return entries.sort((a, b) => GROUP_ORDER.indexOf(a[0]) - GROUP_ORDER.indexOf(b[0]))
+  }, [grouped])
+
+  const toggleSidebar = () => {
+    document.documentElement.classList.toggle('sidebar-collapsed')
+  }
+
   return (
     <aside id="app-sidebar" data-app-nav="primary">
       <div className="app-sidebar-inner">
         <div className="app-brand">
           <span className="brand-name">SIVEPI</span>
           <span className="brand-sub">Sistema Integrado de Vigilância</span>
+          <div className="mt-2">
+            <button className="collapse-btn" title="Recolher menu" onClick={toggleSidebar}>
+              <Icon name="ChevronsLeft" size={16} />
+            </button>
+          </div>
         </div>
 
         <div className="app-search">
@@ -51,7 +66,7 @@ export default function AppSidebar() {
           />
         </div>
 
-        {Object.entries(grouped).map(([groupName, groupItems]) => (
+        {orderedGroupEntries.map(([groupName, groupItems]) => (
           <div key={groupName} className="app-group">
             <div className="app-section">{groupName}</div>
             <nav className="app-nav">

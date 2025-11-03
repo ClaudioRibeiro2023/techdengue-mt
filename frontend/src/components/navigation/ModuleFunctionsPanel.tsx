@@ -73,7 +73,11 @@ export default function ModuleFunctionsPanel() {
     <div className="module-functions-panel">
       <div className="functions-header">
         <h2>Funções</h2>
-        <button className="collapse-btn" title="Recolher">
+        <button
+          className="collapse-btn"
+          title="Recolher"
+          onClick={() => document.documentElement.classList.toggle('functions-collapsed')}
+        >
           <Icon name="ChevronLeft" size={20} />
         </button>
       </div>

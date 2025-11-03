@@ -30,7 +30,7 @@ export const NAVIGATION: NavigationMap = {
       path: '/dashboard',
       topNav: true,
       icon: 'LayoutDashboard',
-      group: 'Painéis',
+      group: 'Dados',
       functions: [
         { id: 'dashboard-consolidado', name: 'Dashboard Consolidado', path: '/dashboard', category: 'INDICADORES', icon: 'LayoutGrid' },
         { id: 'rankings', name: 'Rankings', path: '/dashboard?view=rankings', category: 'INDICADORES', icon: 'TrendingUp' },
@@ -46,7 +46,7 @@ export const NAVIGATION: NavigationMap = {
       path: '/relatorios',
       topNav: true,
       icon: 'FileText',
-      group: 'Painéis',
+      group: 'Dados',
       functions: [
         { id: 'relatorios-epi', name: 'Relatórios EPI', path: '/relatorios?type=epi', category: 'INDICADORES', icon: 'FileSpreadsheet' },
         { id: 'exportacoes', name: 'Exportações', path: '/relatorios?view=export', category: 'OPERACIONAL', icon: 'Download' },
@@ -62,7 +62,7 @@ export const NAVIGATION: NavigationMap = {
       topNav: true,
       icon: 'Database',
       badge: 'BETA',
-      group: 'Painéis',
+      group: 'Serviços Técnicos',
       functions: [
         { id: 'import-sinan', name: 'Importadores SINAN', path: '/etl?src=sinan', category: 'OPERACIONAL', icon: 'Upload' },
         { id: 'import-liraa', name: 'Importadores LIRAa', path: '/etl?src=liraa', category: 'OPERACIONAL', icon: 'Upload' },
@@ -82,7 +82,7 @@ export const NAVIGATION: NavigationMap = {
       path: '/modulos/previsao-simulacao',
       icon: 'Brain',
       badge: 'IA',
-      group: 'Painéis',
+      group: 'Dados',
       functions: [
         { id: 'nowcasting-rt', name: 'Nowcasting / Rt', path: '/modulos/previsao-simulacao?view=nowcasting', category: 'ANALISE', icon: 'Zap' },
         { id: 'previsao-2-4sem', name: 'Previsão 2-4 semanas', path: '/modulos/previsao-simulacao?view=forecast', category: 'ANALISE', icon: 'TrendingUp' },
@@ -170,7 +170,7 @@ export const NAVIGATION: NavigationMap = {
       description: 'Usuários, perfis e parâmetros do sistema',
       path: '/modulos/administracao',
       icon: 'Settings',
-      group: 'Sistema',
+      group: 'Serviços Técnicos',
       functions: [
         { id: 'usuarios-perfis', name: 'Usuários e Perfis', path: '/modulos/administracao?view=usuarios', category: 'CONTROLE', icon: 'Users' },
         { id: 'parametros-sistema', name: 'Parâmetros do Sistema', path: '/modulos/administracao?view=parametros', category: 'CONTROLE', icon: 'Sliders' },
@@ -186,7 +186,7 @@ export const NAVIGATION: NavigationMap = {
       path: '/modulos/observabilidade',
       icon: 'BarChart3',
       badge: 'DEV',
-      group: 'Sistema',
+      group: 'Serviços Técnicos',
       functions: [
         { id: 'metricas', name: 'Métricas', path: '/modulos/observabilidade?view=metricas', category: 'CONTROLE', icon: 'Activity' },
         { id: 'logs-sistema', name: 'Logs', path: '/modulos/observabilidade?view=logs', category: 'CONTROLE', icon: 'FileText' },

@@ -1,13 +1,14 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import UserMenu from '@/components/auth/UserMenu'
-import { Menu, X, Map, BarChart3, Upload, FileText, AlertTriangle, type LucideIcon } from 'lucide-react'
+import { Menu, X, Map, BarChart3, Upload, FileText, AlertTriangle, Settings, Sun, Moon, ChevronsLeft, ChevronsRight, type LucideIcon } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { NAVIGATION } from '@/navigation/map'
 
 export default function Header() {
   const { isAuthenticated } = useAuth()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [dark, setDark] = useState(false)
 
   const topModules = useMemo(() => NAVIGATION.modules.filter(m => m.topNav), [])
 
@@ -18,6 +19,20 @@ export default function Header() {
     'relatorios': FileText,
   }
 
+  const toggleDark = () => {
+    const next = !dark
+    setDark(next)
+    document.documentElement.classList.toggle('theme-dark', next)
+  }
+
+  const toggleSidebar = () => {
+    document.documentElement.classList.toggle('sidebar-collapsed')
+  }
+
+  const toggleFunctions = () => {
+    document.documentElement.classList.toggle('functions-collapsed')
+  }
+
   return (
     <header className="bg-white shadow-sm border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -25,7 +40,7 @@ export default function Header() {
           {/* Logo and Brand */}
           <div className="flex items-center gap-4">
             <Link to="/" className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'var(--brand-primary)' }}>
                 <span className="text-2xl">🦟</span>
               </div>
               <div>
@@ -38,7 +53,24 @@ export default function Header() {
           {/* Desktop Navigation removed: SIVEPI usa apenas sidebars */}
 
           {/* Right Side */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            {/* Collapses */}
+            <button onClick={toggleSidebar} className="hidden md:inline-flex p-2 rounded-lg hover:bg-gray-100" title="Recolher menu principal">
+              <ChevronsLeft className="w-5 h-5" />
+            </button>
+            <button onClick={toggleFunctions} className="hidden lg:inline-flex p-2 rounded-lg hover:bg-gray-100" title="Recolher painel de funções">
+              <ChevronsRight className="w-5 h-5" />
+            </button>
+
+            {/* Dark mode */}
+            <button onClick={toggleDark} className="p-2 rounded-lg hover:bg-gray-100" title="Alternar tema">
+              {dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
+
+            {/* Settings */}
+            <Link to="/profile" className="p-2 rounded-lg hover:bg-gray-100" title="Configurações">
+              <Settings className="w-5 h-5" />
+            </Link>
             {/* e-Denúncia - Sempre visível (público) */}
             <Link
               to="/denuncia"
@@ -66,7 +98,8 @@ export default function Header() {
             ) : (
               <Link
                 to="/login"
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                className="px-4 py-2 text-white rounded-lg transition-colors text-sm font-medium"
+                style={{ background: 'var(--brand-primary)' }}
               >
                 Entrar
               </Link>

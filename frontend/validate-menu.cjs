@@ -104,7 +104,7 @@ console.log('\n✅ VALIDAÇÕES');
 console.log('─────────────────────────────────────────────────────────────');
 
 // Validar grupos (esperados por especificação)
-const expectedGroups = ['Web Mapas', 'Painéis', 'Vigilância', 'Operações', 'Sistema'];
+const expectedGroups = ['Web Mapas', 'Dados', 'Vigilância', 'Operações', 'Serviços Técnicos'];
 const foundGroups = Object.keys(stats.groups);
 const missingGroups = expectedGroups.filter(g => !foundGroups.includes(g));
 const extraGroups = foundGroups.filter(g => !expectedGroups.includes(g));
