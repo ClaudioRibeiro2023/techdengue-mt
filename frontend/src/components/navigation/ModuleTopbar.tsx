@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useMemo } from 'react'
 import { NAVIGATION } from '@/navigation/map'
+import Icon from '@/components/ui/Icon'
 import type { AppModule } from '@/navigation/types'
 
 function resolveActiveModule(pathname: string): AppModule | undefined {
@@ -42,12 +43,13 @@ export default function ModuleTopbar() {
             <Link
               key={fn.id}
               to={fn.path.includes(':') ? '#' : fn.path}
-              className={`px-3 py-1.5 rounded-md text-sm hover:bg-gray-100 whitespace-nowrap ${
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm hover:bg-gray-100 whitespace-nowrap ${
                 isActive(fn.path) ? 'active text-blue-600 font-semibold' : 'text-gray-700'
               }`}
               title={fn.name}
               onClick={e => fn.path.includes(':') && e.preventDefault()}
             >
+              {fn.icon && <Icon name={fn.icon} size={14} />}
               {fn.name}
             </Link>
           ))}

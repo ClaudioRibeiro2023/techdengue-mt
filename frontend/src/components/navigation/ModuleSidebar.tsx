@@ -2,6 +2,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { useMemo } from 'react'
 import { NAVIGATION } from '@/navigation/map'
 import type { AppModule, FunctionItem, NavCategory } from '@/navigation/types'
+import Icon from '@/components/ui/Icon'
 
 function resolveActiveModule(pathname: string): AppModule | undefined {
   // Map pages to module IDs
@@ -76,7 +77,7 @@ export default function ModuleSidebar() {
                 <Link
                   key={it.id}
                   to={it.path.includes(':') ? '#' : it.path}
-                  className={`px-3 py-2 rounded-md text-sm hover:bg-gray-100 transition-all ${
+                  className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm hover:bg-gray-100 transition-all ${
                     isActive(it.path) 
                       ? 'active bg-blue-50 text-blue-600 font-semibold border-l-3 border-blue-600' 
                       : 'text-gray-700'
@@ -84,6 +85,7 @@ export default function ModuleSidebar() {
                   title={it.name}
                   onClick={e => it.path.includes(':') && e.preventDefault()}
                 >
+                  {it.icon && <Icon name={it.icon} size={16} />}
                   {it.name}
                 </Link>
               ))}

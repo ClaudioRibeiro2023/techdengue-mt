@@ -5,6 +5,7 @@ export type FunctionItem = {
   name: string
   path: string
   category?: NavCategory
+  icon?: string
 }
 
 export type AppModule = {
@@ -13,6 +14,7 @@ export type AppModule = {
   description?: string
   path: string
   topNav?: boolean
+  icon?: string
   functions?: FunctionItem[]
 }
 
