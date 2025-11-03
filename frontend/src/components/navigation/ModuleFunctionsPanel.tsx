@@ -62,7 +62,7 @@ export default function ModuleFunctionsPanel() {
             onClick={e => fn.path.includes(':') && e.preventDefault()}
           >
             <div className="function-icon">
-              {fn.icon && <Icon name={fn.icon} size={24} />}
+              {fn.icon && <Icon name={fn.icon} size={20} />}
             </div>
             <div className="function-label">{fn.name}</div>
             {fn.category && (

@@ -301,7 +301,7 @@
 
 /* ===== MODULE FUNCTIONS PANEL (Cards) ===== */
 .module-functions-panel {
-  width: 20rem; /* 320px */
+  width: 18.75rem; /* 300px */
   background: #ffffff;
   border-right: 1px solid #e2e8f0;
   box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
@@ -346,8 +346,8 @@
 .functions-grid {
   padding: 1rem;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 0.875rem;
 }
 
 .function-card {
@@ -358,7 +358,7 @@
   padding: 1rem 0.75rem;
   border-radius: 12px;
   background: #ffffff;
-  border: 1.5px solid #e2e8f0;
+  border: 2px solid #e2e8f0;
   text-decoration: none;
   transition: all 0.2s ease;
   cursor: pointer;
@@ -371,16 +371,18 @@
 }
 
 .function-card.active {
-  background: linear-gradient(135deg, #dbeafe 0%, #e0f2fe 100%);
-  border-color: #3b82f6;
+  background: linear-gradient(135deg, #bfdbfe 0%, #dbeafe 50%, #e0f2fe 100%);
+  border-color: #2563eb;
+  border-width: 2px;
   box-shadow: 
-    0 4px 12px rgba(59, 130, 246, 0.25),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    0 4px 16px rgba(37, 99, 235, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -1px 0 rgba(59, 130, 246, 0.1);
 }
 
 .function-card .function-icon {
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -391,9 +393,11 @@
 }
 
 .function-card.active .function-icon {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
   color: #ffffff;
-  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+  box-shadow: 
+    0 4px 12px rgba(37, 99, 235, 0.4),
+    inset 0 1px 0 rgba(147, 197, 253, 0.5);
 }
 
 .function-card .function-label {

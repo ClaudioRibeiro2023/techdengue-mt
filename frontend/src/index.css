@@ -1,9 +1,9 @@
+/* Navigation System CSS - Must be imported first */
+@import './styles/navigation.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Navigation System CSS */
-@import './styles/navigation.css';
 
 html, body, #root {
   height: 100%;
