@@ -1,7 +1,7 @@
 import { Outlet } from 'react-router-dom'
 import Header from './Header'
 import AppSidebar from '@/components/navigation/AppSidebar'
-import ModuleSidebar from '@/components/navigation/ModuleSidebar'
+import ModuleFunctionsPanel from '@/components/navigation/ModuleFunctionsPanel'
 
 export default function MainLayout() {
   return (
@@ -9,11 +9,9 @@ export default function MainLayout() {
       <Header />
       <div className="flex">
         <AppSidebar />
-        <ModuleSidebar />
-        <main className="flex-1 p-6">
-          <div className="mx-auto w-full max-w-[1400px]">
-            <Outlet />
-          </div>
+        <ModuleFunctionsPanel />
+        <main className="flex-1 overflow-auto">
+          <Outlet />
         </main>
       </div>
     </div>
