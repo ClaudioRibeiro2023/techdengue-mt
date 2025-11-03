@@ -4,6 +4,8 @@ import { NAVIGATION } from '@/navigation/map'
 import Icon from '@/components/ui/Icon'
 import type { AppModule } from '@/navigation/types'
 
+const DEFAULT_MODULE_ID = 'mapa-vivo'
+
 function resolveActiveModule(pathname: string): AppModule | undefined {
   const segs = pathname.split('/').filter(Boolean)
   if (['mapa', 'dashboard', 'etl', 'relatorios', 'denuncia'].includes(segs[0])) {
@@ -26,7 +28,12 @@ export default function ModuleFunctionsPanel() {
   const location = useLocation()
   const { pathname, search } = location
 
-  const module = useMemo(() => resolveActiveModule(pathname), [pathname])
+  const module = useMemo(() => {
+    return (
+      resolveActiveModule(pathname) ||
+      NAVIGATION.modules.find(m => m.id === DEFAULT_MODULE_ID)
+    )
+  }, [pathname])
 
   const isActive = (path: string) => {
     if (path.includes(':')) return false
