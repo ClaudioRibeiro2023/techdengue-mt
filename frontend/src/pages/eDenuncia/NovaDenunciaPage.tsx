@@ -158,10 +158,23 @@ const NovaDenunciaPage: React.FC = () => {
 
     let foto_url: string | undefined;
     try {
-      // 1. Upload foto (se houver) - Simulado por enquanto
+      // 1. Upload foto (se houver)
       if (fotoFile) {
-        // TODO: Implementar upload real para S3/MinIO
-        foto_url = `denuncias/${Date.now()}-${fotoFile.name}`;
+        const formData = new FormData();
+        formData.append('file', fotoFile);
+        
+        const uploadRes = await fetch('/api/upload/foto', {
+          method: 'POST',
+          body: formData,
+        });
+        
+        if (!uploadRes.ok) {
+          const uploadErr = await uploadRes.json();
+          throw new Error(uploadErr.detail || 'Erro ao fazer upload da foto');
+        }
+        
+        const uploadData = await uploadRes.json();
+        foto_url = uploadData.url; // Caminho relativo para salvar no DB
       }
 
       // 2. Montar payload

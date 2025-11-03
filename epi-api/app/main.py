@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
 
 from app.middleware import RequestIDMiddleware, LoggingMiddleware, MetricsMiddleware, JSONFormatter
-from app.routers import etl, mapa
+from app.routers import etl, mapa, denuncias, upload
 import logging
 
 # Configure JSON logging
@@ -24,6 +24,8 @@ app = FastAPI(
 # Include routers
 app.include_router(etl.router, prefix="/api")
 app.include_router(mapa.router, prefix="/api")
+app.include_router(denuncias.router)
+app.include_router(upload.router)
 
 # CORS middleware
 app.add_middleware(
