@@ -21,13 +21,55 @@ const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true'
 
 // Placeholder pages for other modules (to be implemented)
 function MapaPage() {
-  return <div className="p-8"><h1 className="text-2xl font-bold">Mapa - Em Desenvolvimento</h1></div>
+  return (
+    <>
+      <div className="page-header">
+        <h1 className="page-title">Mapa Vivo</h1>
+        <p className="page-subtitle">WebMapa Unificado - Navegação e análises espaciais</p>
+        <div className="development-notice">
+          <span>⚠️</span>
+          <span>Em Desenvolvimento</span>
+        </div>
+      </div>
+      <div className="content-section">
+        <p>Selecione uma função no painel lateral para começar.</p>
+      </div>
+    </>
+  )
 }
 function ETLPage() {
-  return <div className="p-8"><h1 className="text-2xl font-bold">ETL - Em Desenvolvimento</h1></div>
+  return (
+    <>
+      <div className="page-header">
+        <h1 className="page-title">ETL & Integração</h1>
+        <p className="page-subtitle">Importadores e tratamento de dados</p>
+        <div className="development-notice">
+          <span>⚠️</span>
+          <span>Em Desenvolvimento</span>
+        </div>
+      </div>
+      <div className="content-section">
+        <p>Selecione uma função no painel lateral para começar.</p>
+      </div>
+    </>
+  )
 }
 function RelatoriosPage() {
-  return <div className="p-8"><h1 className="text-2xl font-bold">Relatórios - Em Desenvolvimento</h1></div>
+  return (
+    <>
+      <div className="page-header">
+        <h1 className="page-title">Relatórios & Indicadores</h1>
+        <p className="page-subtitle">Relatórios EPI e exportações</p>
+        <div className="development-notice">
+          <span>⚠️</span>
+          <span>Em Desenvolvimento</span>
+        </div>
+      </div>
+      <div className="content-section">
+        <p>Selecione uma função no painel lateral para começar.</p>
+      </div>
+    </>
+  )
 }
 
 export default function App() {
