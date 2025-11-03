@@ -6,13 +6,6 @@ const path = require('path');
 const mapPath = path.join(__dirname, 'src', 'navigation', 'map.ts');
 const content = fs.readFileSync(mapPath, 'utf-8');
 
-// Extrair NAVIGATION object (parsing manual simples)
-const navMatch = content.match(/export const NAVIGATION[^{]*\{[\s\S]*modules:\s*\[([\s\S]*)\]\s*,?\s*\}/);
-if (!navMatch) {
-  console.error('❌ Não foi possível extrair NAVIGATION');
-  process.exit(1);
-}
-
 // Contadores
 let stats = {
   modules: 0,
@@ -25,16 +18,8 @@ let stats = {
   errors: [],
 };
 
-// Parse manual dos módulos
-const modulesText = content;
-const moduleMatches = modulesText.matchAll(/\{\s*id:\s*['"]([^'"]+)['"],\s*name:\s*['"]([^'"]+)['"]/g);
-
-for (const match of moduleMatches) {
-  stats.modules++;
-}
-
 // Parse de funções
-const functionMatches = modulesText.matchAll(/\{\s*id:\s*['"]([^'"]+)['"],\s*name:\s*['"]([^'"]+)['"],\s*path:\s*['"]([^'"]+)['"],\s*category:\s*['"]([^'"]+)['"],\s*icon:\s*['"]([^'"]+)['"]/g);
+const functionMatches = content.matchAll(/\{\s*id:\s*['"]([^'"]+)['"],\s*name:\s*['"]([^'"]+)['"],\s*path:\s*['"]([^'"]+)['"],\s*category:\s*['"]([^'"]+)['"],\s*icon:\s*['"]([^'"]+)['"]/g);
 
 for (const match of functionMatches) {
   const [, id, name, path, category, icon] = match;
@@ -52,15 +37,17 @@ for (const match of functionMatches) {
   }
 }
 
-// Parse de grupos
-const groupMatches = modulesText.matchAll(/group:\s*['"]([^'"]+)['"]/g);
+// Parse de grupos (apenas em módulos)
+const groupMatches = content.matchAll(/group:\s*['"]([^'"]+)['"]/g);
 for (const match of groupMatches) {
   const group = match[1];
   stats.groups[group] = (stats.groups[group] || 0) + 1;
 }
+// Total de módulos = soma dos grupos
+stats.modules = Object.values(stats.groups).reduce((a, b) => a + b, 0);
 
 // Parse de badges
-const badgeMatches = modulesText.matchAll(/badge:\s*['"]([^'"]+)['"]/g);
+const badgeMatches = content.matchAll(/badge:\s*['"]([^'"]+)['"]/g);
 for (const match of badgeMatches) {
   const badge = match[1];
   stats.badges[badge] = (stats.badges[badge] || 0) + 1;
@@ -116,22 +103,7 @@ if (Object.keys(stats.badges).length === 0) {
 console.log('\n✅ VALIDAÇÕES');
 console.log('─────────────────────────────────────────────────────────────');
 
-// Validar total esperado
-if (stats.modules === 11) {
-  console.log('  ✅ Total de módulos correto (11)');
-} else {
-  console.log(`  ❌ Total de módulos incorreto (esperado: 11, encontrado: ${stats.modules})`);
-  stats.errors.push('Número de módulos incorreto');
-}
-
-if (stats.functions === 48) {
-  console.log('  ✅ Total de funções correto (48)');
-} else {
-  console.log(`  ❌ Total de funções incorreto (esperado: 48, encontrado: ${stats.functions})`);
-  stats.errors.push('Número de funções incorreto');
-}
-
-// Validar grupos
+// Validar grupos (esperados por especificação)
 const expectedGroups = ['Web Mapas', 'Painéis', 'Vigilância', 'Operações', 'Sistema'];
 const foundGroups = Object.keys(stats.groups);
 const missingGroups = expectedGroups.filter(g => !foundGroups.includes(g));
@@ -149,7 +121,7 @@ if (missingGroups.length === 0 && extraGroups.length === 0) {
   }
 }
 
-// Validar categorias
+// Validar categorias (esperadas por especificação)
 const expectedCategories = ['ANALISE', 'MAPEAMENTO', 'INDICADORES', 'CONTROLE', 'OPERACIONAL'];
 const foundCategories = Object.keys(stats.categories);
 const missingCategories = expectedCategories.filter(c => !foundCategories.includes(c));

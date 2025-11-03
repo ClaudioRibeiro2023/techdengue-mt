@@ -2,7 +2,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { useMemo } from 'react'
 import { NAVIGATION } from '@/navigation/map'
 import Icon from '@/components/ui/Icon'
-import type { AppModule } from '@/navigation/types'
+import type { AppModule, FunctionItem } from '@/navigation/types'
 
 const DEFAULT_MODULE_ID = 'mapa-vivo'
 
@@ -48,6 +48,25 @@ export default function ModuleFunctionsPanel() {
     return true
   }
 
+  const CATEGORY_ORDER: Array<NonNullable<FunctionItem['category']>> = [
+    'ANALISE',
+    'MAPEAMENTO',
+    'INDICADORES',
+    'CONTROLE',
+    'OPERACIONAL',
+  ]
+
+  const grouped = useMemo(() => {
+    const by: Record<string, FunctionItem[]> = {}
+    if (!module?.functions) return by
+    for (const fn of module.functions) {
+      if (!fn.category) continue
+      if (!by[fn.category]) by[fn.category] = []
+      by[fn.category].push(fn)
+    }
+    return by
+  }, [module])
+
   if (!module || !module.functions?.length) return null
 
   return (
@@ -59,25 +78,30 @@ export default function ModuleFunctionsPanel() {
         </button>
       </div>
 
-      <div className="functions-grid">
-        {module.functions.map(fn => (
-          <Link
-            key={fn.id}
-            to={fn.path.includes(':') ? '#' : fn.path}
-            className={`function-card ${isActive(fn.path) ? 'active' : ''}`}
-            title={fn.name}
-            onClick={e => fn.path.includes(':') && e.preventDefault()}
-          >
-            <div className="function-icon">
-              {fn.icon && <Icon name={fn.icon} size={20} />}
-            </div>
-            <div className="function-label">{fn.name}</div>
-            {fn.category && (
-              <div className="function-category">{fn.category}</div>
-            )}
-          </Link>
-        ))}
-      </div>
+      {CATEGORY_ORDER.filter(cat => grouped[cat]?.length).map(cat => (
+        <div key={cat} className="functions-section">
+          <div className="functions-section-title">{cat}</div>
+          <div className="functions-grid">
+            {grouped[cat]!.map(fn => (
+              <Link
+                key={fn.id}
+                to={fn.path.includes(':') ? '#' : fn.path}
+                className={`function-card ${isActive(fn.path) ? 'active' : ''}`}
+                title={fn.name}
+                onClick={e => fn.path.includes(':') && e.preventDefault()}
+              >
+                <div className="function-icon">
+                  {fn.icon && <Icon name={fn.icon} size={20} />}
+                </div>
+                <div className="function-label">{fn.name}</div>
+                {fn.category && (
+                  <div className="function-category">{fn.category}</div>
+                )}
+              </Link>
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
   )
 }

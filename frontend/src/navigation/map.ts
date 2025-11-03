@@ -14,8 +14,10 @@ export const NAVIGATION: NavigationMap = {
       functions: [
         { id: 'mapa-principal', name: 'Mapa Principal', path: '/mapa', category: 'MAPEAMENTO', icon: 'Map' },
         { id: 'mapa-calor', name: 'Mapa de Calor', path: '/mapa?view=heatmap', category: 'ANALISE', icon: 'Flame' },
+        { id: 'clusters', name: 'Clusters', path: '/mapa?view=clusters', category: 'ANALISE', icon: 'Grid3X3' },
         { id: 'hotspots-mapa', name: 'Hotspots', path: '/mapa?view=hotspots', category: 'ANALISE', icon: 'MapPin' },
         { id: 'zonas-risco', name: 'Zonas de Risco', path: '/mapa?view=risk', category: 'ANALISE', icon: 'AlertTriangle' },
+        { id: 'pontos-criticos', name: 'Pontos Críticos', path: '/mapa?view=critical', category: 'ANALISE', icon: 'AlertOctagon' },
         { id: 'camadas-externas', name: 'Camadas Externas', path: '/mapa?view=layers', category: 'MAPEAMENTO', icon: 'Layers' },
       ],
     },
@@ -62,10 +64,14 @@ export const NAVIGATION: NavigationMap = {
       badge: 'BETA',
       group: 'Painéis',
       functions: [
-        { id: 'importadores', name: 'Importadores', path: '/etl?view=importers', category: 'OPERACIONAL', icon: 'Upload' },
+        { id: 'import-sinan', name: 'Importadores SINAN', path: '/etl?src=sinan', category: 'OPERACIONAL', icon: 'Upload' },
+        { id: 'import-liraa', name: 'Importadores LIRAa', path: '/etl?src=liraa', category: 'OPERACIONAL', icon: 'Upload' },
+        { id: 'import-ovitrampas', name: 'Importadores Ovitrampas', path: '/etl?src=ovitrampas', category: 'OPERACIONAL', icon: 'Upload' },
+        { id: 'import-ibge', name: 'Importadores IBGE/Shape', path: '/etl?src=ibge', category: 'OPERACIONAL', icon: 'Upload' },
         { id: 'tratamento', name: 'Tratamento/Mapeamento', path: '/etl?view=transform', category: 'OPERACIONAL', icon: 'Workflow' },
         { id: 'catalogo-dados', name: 'Catálogo de Dados', path: '/etl?view=catalog', category: 'CONTROLE', icon: 'BookMarked' },
         { id: 'qualidade-rastros', name: 'Qualidade & Rastros', path: '/etl?view=quality', category: 'CONTROLE', icon: 'Shield' },
+        { id: 'logs-reprocesso', name: 'Logs & Reprocesso', path: '/etl?view=reprocess', category: 'CONTROLE', icon: 'History' },
       ],
     },
 
@@ -98,6 +104,12 @@ export const NAVIGATION: NavigationMap = {
         { id: 'ovitrampas', name: 'Ovitrampas', path: '/modulos/vigilancia-entomologica?view=ovitrampas', category: 'MAPEAMENTO', icon: 'MapPinned' },
         { id: 'indices-entomo', name: 'Índices (IPO/IDO/IMO)', path: '/modulos/vigilancia-entomologica?view=indices', category: 'INDICADORES', icon: 'TrendingUp' },
         { id: 'qualidade-entomo', name: 'Qualidade', path: '/modulos/vigilancia-entomologica?view=qualidade', category: 'CONTROLE', icon: 'CheckCircle' },
+        // Funções de mapa dentro do módulo (conforme bench)
+        { id: 'entomo-mapa-principal', name: 'Mapa Principal', path: '/modulos/vigilancia-entomologica?view=mapa', category: 'MAPEAMENTO', icon: 'Map' },
+        { id: 'entomo-mapa-calor', name: 'Mapa de Calor', path: '/modulos/vigilancia-entomologica?view=heatmap', category: 'ANALISE', icon: 'Flame' },
+        { id: 'entomo-hotspots', name: 'Hotspots', path: '/modulos/vigilancia-entomologica?view=hotspots', category: 'ANALISE', icon: 'MapPin' },
+        { id: 'entomo-zonas-risco', name: 'Zonas de Risco', path: '/modulos/vigilancia-entomologica?view=risk', category: 'ANALISE', icon: 'AlertTriangle' },
+        { id: 'entomo-camadas', name: 'Camadas (clusters, pontos)', path: '/modulos/vigilancia-entomologica?view=camadas', category: 'MAPEAMENTO', icon: 'Layers' },
       ],
     },
 
@@ -110,6 +122,7 @@ export const NAVIGATION: NavigationMap = {
       group: 'Vigilância',
       functions: [
         { id: 'epi-visao-geral', name: 'Visão Geral', path: '/modulos/vigilancia-epidemiologica?view=overview', category: 'ANALISE', icon: 'Eye' },
+        { id: 'epi-nowcasting', name: 'Nowcasting / Rt', path: '/modulos/vigilancia-epidemiologica?view=nowcasting', category: 'ANALISE', icon: 'Activity' },
         { id: 'series-temporais', name: 'Séries Temporais', path: '/modulos/vigilancia-epidemiologica?view=temporal', category: 'ANALISE', icon: 'LineChart' },
         { id: 'mapa-incidencia', name: 'Mapa de Incidência', path: '/modulos/vigilancia-epidemiologica?view=mapa', category: 'MAPEAMENTO', icon: 'Map' },
         { id: 'hotspots-epi', name: 'Hotspots', path: '/modulos/vigilancia-epidemiologica?view=hotspots', category: 'ANALISE', icon: 'MapPin' },
