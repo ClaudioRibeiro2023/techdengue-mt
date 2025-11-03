@@ -26,6 +26,12 @@ export default function ModuleTopbar() {
 
   const module = useMemo(() => resolveActiveModule(pathname), [pathname])
 
+  const isActive = (path: string) => {
+    if (path.includes(':')) return false
+    // Exact match or starts with path
+    return pathname === path || pathname.startsWith(path + '/')
+  }
+
   if (!module || !module.functions?.length) return null
 
   return (
@@ -36,7 +42,9 @@ export default function ModuleTopbar() {
             <Link
               key={fn.id}
               to={fn.path.includes(':') ? '#' : fn.path}
-              className="px-3 py-1.5 rounded-md text-sm text-gray-700 hover:bg-gray-100 whitespace-nowrap"
+              className={`px-3 py-1.5 rounded-md text-sm hover:bg-gray-100 whitespace-nowrap ${
+                isActive(fn.path) ? 'active text-blue-600 font-semibold' : 'text-gray-700'
+              }`}
               title={fn.name}
               onClick={e => fn.path.includes(':') && e.preventDefault()}
             >
