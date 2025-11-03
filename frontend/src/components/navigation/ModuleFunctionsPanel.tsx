@@ -72,7 +72,7 @@ export default function ModuleFunctionsPanel() {
   return (
     <div className="module-functions-panel">
       <div className="functions-header">
-        <h2>Funções</h2>
+        <h2>Ferramentas</h2>
         <button
           className="collapse-btn"
           title="Recolher"

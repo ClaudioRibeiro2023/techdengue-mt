@@ -1,7 +1,7 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import UserMenu from '@/components/auth/UserMenu'
-import { Menu, X, Map, BarChart3, Upload, FileText, AlertTriangle, Settings, Sun, Moon, ChevronsLeft, ChevronsRight, type LucideIcon } from 'lucide-react'
+import { Menu, X, Map, BarChart3, Upload, AlertTriangle, Settings, Sun, Moon, ChevronsLeft, ChevronsRight, ChevronRight, type LucideIcon } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { NAVIGATION } from '@/navigation/map'
 
@@ -9,6 +9,7 @@ export default function Header() {
   const { isAuthenticated } = useAuth()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [dark, setDark] = useState(false)
+  const { pathname } = useLocation()
 
   const topModules = useMemo(() => NAVIGATION.modules.filter(m => m.topNav), [])
 
@@ -16,8 +17,24 @@ export default function Header() {
     'mapa-vivo': Map,
     'dashboard-executivo': BarChart3,
     'etl-integracao': Upload,
-    'relatorios': FileText,
+    'relatorios': BarChart3,
   }
+
+  function resolveActiveModule(path: string) {
+    const mapByPrefix: Record<string, string> = {
+      '/mapa': 'mapa-vivo',
+      '/dashboard': 'dashboard-executivo',
+      '/etl': 'etl-integracao',
+      '/relatorios': 'relatorios',
+      '/denuncia': 'e-denuncia',
+    }
+    const matched = Object.keys(mapByPrefix).find(p => path.startsWith(p))
+    if (matched) return NAVIGATION.modules.find(m => m.id === mapByPrefix[matched])
+    const segs = path.split('/').filter(Boolean)
+    if (segs[0] === 'modulos' && segs[1]) return NAVIGATION.modules.find(m => m.id === segs[1])
+    return undefined
+  }
+  const activeModule = useMemo(() => resolveActiveModule(pathname), [pathname])
 
   const toggleDark = () => {
     const next = !dark
@@ -34,8 +51,8 @@ export default function Header() {
   }
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-[920]">
+      <div className="px-3 sm:px-4 lg:px-6">
         <div className="flex justify-between items-center h-16">
           {/* Logo and Brand */}
           <div className="flex items-center gap-4">
@@ -106,6 +123,28 @@ export default function Header() {
             )}
           </div>
         </div>
+
+        {/* Breadcrumb row */}
+        {isAuthenticated && (
+          <div className="h-12 flex items-center justify-between border-t border-gray-200">
+            <nav className="flex items-center text-sm text-gray-500 gap-2">
+              <Link to="/" className="hover:text-gray-700">SIVEPI</Link>
+              <ChevronRight className="w-4 h-4" />
+              {activeModule?.group && (
+                <>
+                  <span className="uppercase tracking-wider">{activeModule.group}</span>
+                  <ChevronRight className="w-4 h-4" />
+                </>
+              )}
+              <span className="font-semibold text-gray-700">{activeModule?.name || 'Início'}</span>
+            </nav>
+            <div className="flex items-center gap-2">
+              <button className="px-3 py-1.5 text-sm rounded-md border border-gray-200 hover:bg-gray-50">Filtros</button>
+              <button className="px-3 py-1.5 text-sm rounded-md border border-gray-200 hover:bg-gray-50">Análise</button>
+              <button className="px-3 py-1.5 text-sm rounded-md border border-gray-200 hover:bg-gray-50">Dados</button>
+            </div>
+          </div>
+        )}
 
         {/* Mobile Navigation */}
         {isAuthenticated && isMobileMenuOpen && (

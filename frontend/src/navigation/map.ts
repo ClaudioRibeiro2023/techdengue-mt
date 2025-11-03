@@ -45,7 +45,7 @@ export const NAVIGATION: NavigationMap = {
       description: 'Relatórios EPI e exportações',
       path: '/relatorios',
       topNav: true,
-      icon: 'FileText',
+      icon: 'BarChart3',
       group: 'Dados',
       functions: [
         { id: 'relatorios-epi', name: 'Relatórios EPI', path: '/relatorios?type=epi', category: 'INDICADORES', icon: 'FileSpreadsheet' },
@@ -135,7 +135,7 @@ export const NAVIGATION: NavigationMap = {
       name: 'e‑Denúncia',
       description: 'Participação social e atividades de campo',
       path: '/denuncia',
-      icon: 'MessageSquare',
+      icon: 'Megaphone',
       group: 'Vigilância',
       functions: [
         { id: 'nova-denuncia', name: 'Nova Denúncia', path: '/denuncia', category: 'OPERACIONAL', icon: 'Plus' },
@@ -184,7 +184,7 @@ export const NAVIGATION: NavigationMap = {
       name: 'Observabilidade',
       description: 'Métricas, logs e qualidade operacional',
       path: '/modulos/observabilidade',
-      icon: 'BarChart3',
+      icon: 'Gauge',
       badge: 'DEV',
       group: 'Serviços Técnicos',
       functions: [

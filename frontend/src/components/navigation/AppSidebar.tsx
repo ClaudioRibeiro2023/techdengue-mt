@@ -3,6 +3,8 @@ import { useMemo, useState } from 'react'
 import { NAVIGATION } from '@/navigation/map'
 import Icon from '@/components/ui/Icon'
 
+const GROUP_ORDER = ['Web Mapas', 'Dados', 'Vigilância', 'Operações', 'Serviços Técnicos', 'Sistema', 'Outros']
+
 export default function AppSidebar() {
   const { pathname } = useLocation()
   const [query, setQuery] = useState('')
@@ -34,7 +36,6 @@ export default function AppSidebar() {
     return groups
   }, [filtered])
 
-  const GROUP_ORDER = ['Web Mapas', 'Dados', 'Vigilância', 'Operações', 'Serviços Técnicos', 'Sistema', 'Outros']
   const orderedGroupEntries = useMemo(() => {
     const entries = Object.entries(grouped)
     return entries.sort((a, b) => GROUP_ORDER.indexOf(a[0]) - GROUP_ORDER.indexOf(b[0]))
@@ -67,7 +68,7 @@ export default function AppSidebar() {
         </div>
 
         {orderedGroupEntries.map(([groupName, groupItems]) => (
-          <div key={groupName} className="app-group">
+          <div key={groupName} className="app-group" data-group={groupName}>
             <div className="app-section">{groupName}</div>
             <nav className="app-nav">
               {groupItems.map(it => (
