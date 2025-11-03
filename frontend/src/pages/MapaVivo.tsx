@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, GeoJSON, Circle } from 'react-leaflet';
-import { LatLngExpression } from 'leaflet';
+import L, { LatLngExpression, PathOptions } from 'leaflet';
+import type { Feature, FeatureCollection, Geometry } from 'geojson';
 import axios from 'axios';
 import { getAuthHeader } from '../services/authService';
 import { Layers, Filter, Download } from 'lucide-react';
@@ -25,6 +26,13 @@ interface MapFilters {
   tipoCamada: string;
 }
 
+// Propriedades esperadas nos polígonos de municípios
+interface MunicipioProps {
+  nome: string;
+  valor?: number;
+  nivel_risco?: 'BAIXO' | 'MEDIO' | 'ALTO' | 'MUITO_ALTO' | string;
+}
+
 const MapaVivo: React.FC = () => {
   const [filters, setFilters] = useState<MapFilters>({
     ano: new Date().getFullYear(),
@@ -32,7 +40,7 @@ const MapaVivo: React.FC = () => {
   });
 
   const [heatmapData, setHeatmapData] = useState<HeatmapPoint[]>([]);
-  const [choroplethData, setChoroplethData] = useState<any>(null);
+  const [choroplethData, setChoroplethData] = useState<FeatureCollection<Geometry, MunicipioProps> | null>(null);
   const [loading, setLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
 
@@ -84,7 +92,7 @@ const MapaVivo: React.FC = () => {
     fetchChoropleth();
   }, [filters]);
 
-  const onEachFeature = (feature: any, layer: any) => {
+  const onEachFeature = (feature: Feature<Geometry, MunicipioProps>, layer: L.Layer) => {
     if (feature.properties) {
       const { nome, valor, nivel_risco } = feature.properties;
       layer.bindPopup(`
@@ -97,8 +105,8 @@ const MapaVivo: React.FC = () => {
     }
   };
 
-  const getFeatureStyle = (feature: any) => {
-    const nivel = feature.properties?.nivel_risco;
+  const getFeatureStyle = (feature?: Feature<Geometry, MunicipioProps>): PathOptions => {
+    const nivel = feature?.properties?.nivel_risco;
     const colors: Record<string, string> = {
       BAIXO: '#4CAF50',
       MEDIO: '#FFC107',
@@ -106,8 +114,10 @@ const MapaVivo: React.FC = () => {
       MUITO_ALTO: '#F44336',
     };
 
+    const fillColor = (nivel && colors[nivel]) ? colors[nivel] : '#2196F3';
+
     return {
-      fillColor: colors[nivel] || '#2196F3',
+      fillColor,
       weight: 1,
       opacity: 1,
       color: 'white',
@@ -154,8 +164,10 @@ const MapaVivo: React.FC = () => {
         {showFilters && (
           <div className="mt-4 p-4 bg-gray-50 rounded-lg grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-2">Ano</label>
+              <label htmlFor="map-ano" className="block text-sm font-medium mb-2">Ano</label>
               <select
+                id="map-ano"
+                aria-label="Ano"
                 value={filters.ano}
                 onChange={(e) => setFilters({ ...filters, ano: parseInt(e.target.value) })}
                 className="w-full border rounded-md px-3 py-2"
@@ -167,8 +179,10 @@ const MapaVivo: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Doença</label>
+              <label htmlFor="map-doenca" className="block text-sm font-medium mb-2">Doença</label>
               <select
+                id="map-doenca"
+                aria-label="Doença"
                 value={filters.doenca || ''}
                 onChange={(e) => setFilters({ ...filters, doenca: e.target.value || undefined })}
                 className="w-full border rounded-md px-3 py-2"
@@ -181,8 +195,10 @@ const MapaVivo: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">Camada</label>
+              <label htmlFor="map-camada" className="block text-sm font-medium mb-2">Camada</label>
               <select
+                id="map-camada"
+                aria-label="Camada"
                 value={filters.tipoCamada}
                 onChange={(e) => setFilters({ ...filters, tipoCamada: e.target.value })}
                 className="w-full border rounded-md px-3 py-2"
@@ -272,19 +288,19 @@ const MapaVivo: React.FC = () => {
         <h3 className="font-bold mb-2">Legenda</h3>
         <div className="space-y-2">
           <div className="flex items-center space-x-2">
-            <div className="w-6 h-6 rounded" style={{ backgroundColor: '#4CAF50' }}></div>
+            <div className="w-6 h-6 rounded bg-[#4CAF50]"></div>
             <span className="text-sm">Baixo Risco</span>
           </div>
           <div className="flex items-center space-x-2">
-            <div className="w-6 h-6 rounded" style={{ backgroundColor: '#FFC107' }}></div>
+            <div className="w-6 h-6 rounded bg-[#FFC107]"></div>
             <span className="text-sm">Médio Risco</span>
           </div>
           <div className="flex items-center space-x-2">
-            <div className="w-6 h-6 rounded" style={{ backgroundColor: '#FF9800' }}></div>
+            <div className="w-6 h-6 rounded bg-[#FF9800]"></div>
             <span className="text-sm">Alto Risco</span>
           </div>
           <div className="flex items-center space-x-2">
-            <div className="w-6 h-6 rounded" style={{ backgroundColor: '#F44336' }}></div>
+            <div className="w-6 h-6 rounded bg-[#F44336]"></div>
             <span className="text-sm">Muito Alto Risco</span>
           </div>
         </div>

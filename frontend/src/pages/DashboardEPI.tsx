@@ -3,6 +3,59 @@ import KPICards from '../components/dashboard/KPICards';
 import TimeSeriesChart from '../components/dashboard/TimeSeriesChart';
 import TopNChart from '../components/dashboard/TopNChart';
 
+// Tipos mínimos para remover 'any' e alinhar com componentes filhos
+type KPIVariacao = {
+  valor_atual: number;
+  valor_anterior: number;
+  variacao_absoluta: number;
+  variacao_percentual: number;
+  tendencia: 'alta' | 'baixa' | 'estavel';
+};
+
+type KPICard = {
+  titulo: string;
+  valor: number;
+  unidade: string;
+  variacao?: KPIVariacao;
+  icone?: string;
+  cor?: string;
+  descricao?: string;
+};
+
+type KpisData = {
+  total_casos: KPICard;
+  total_obitos: KPICard;
+  taxa_letalidade: KPICard;
+  incidencia_media: KPICard;
+  municipios_risco_alto?: KPICard;
+  casos_graves?: KPICard;
+  ultima_atualizacao?: string;
+  periodo_inicio?: string;
+  periodo_fim?: string;
+};
+
+type TimeSeriesPoint = { data: string; valor: number };
+type TimeSeriesSerie = { nome: string; tipo: string; unidade: string; dados: TimeSeriesPoint[]; cor?: string };
+type TimeSeriesData = {
+  series: TimeSeriesSerie[];
+  periodo_agregacao: string;
+  periodo_inicio: string;
+  periodo_fim: string;
+  total_pontos: number;
+};
+
+type TopNEntry = { posicao: number; codigo_ibge: string; nome: string; valor: number; valor_secundario?: number; percentual?: number; nivel_risco?: string; cor_hex?: string };
+type TopNData = {
+  ranking: TopNEntry[];
+  tipo_indicador: string;
+  unidade: string;
+  total_items: number;
+  limite: number;
+  periodo_inicio: string;
+  periodo_fim: string;
+  agregacao?: string;
+};
+
 interface DashboardFilters {
   ano: number;
   semanaInicio?: number;
@@ -15,9 +68,9 @@ const DashboardEPI: React.FC = () => {
     ano: new Date().getFullYear(),
   });
   
-  const [kpis, setKpis] = useState<any>(null);
-  const [series, setSeries] = useState<any>(null);
-  const [topN, setTopN] = useState<any>(null);
+  const [kpis, setKpis] = useState<KpisData | null>(null);
+  const [series, setSeries] = useState<TimeSeriesData | null>(null);
+  const [topN, setTopN] = useState<TopNData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -132,10 +185,12 @@ const DashboardEPI: React.FC = () => {
       <div className="bg-white rounded-lg shadow p-6 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="filtro-ano" className="block text-sm font-medium text-gray-700 mb-2">
               Ano
             </label>
             <select
+              id="filtro-ano"
+              aria-label="Ano"
               value={filters.ano}
               onChange={(e) => setFilters({ ...filters, ano: parseInt(e.target.value) })}
               className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -177,10 +232,12 @@ const DashboardEPI: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="filtro-doenca" className="block text-sm font-medium text-gray-700 mb-2">
               Doença
             </label>
             <select
+              id="filtro-doenca"
+              aria-label="Doença"
               value={filters.doencaTipo || ''}
               onChange={(e) => setFilters({ ...filters, doencaTipo: e.target.value || undefined })}
               className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
