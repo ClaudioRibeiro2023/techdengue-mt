@@ -330,10 +330,11 @@ const NovaDenunciaPage: React.FC = () => {
 
               {/* Município */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="municipio" className="block text-sm font-medium text-gray-700 mb-2">
                   Município *
                 </label>
                 <select
+                  id="municipio"
                   value={municipioCodigo}
                   onChange={(e) => setMunicipioCodigo(e.target.value)}
                   className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -349,10 +350,11 @@ const NovaDenunciaPage: React.FC = () => {
 
               {/* Endereço */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="endereco" className="block text-sm font-medium text-gray-700 mb-2">
                   Endereço completo *
                 </label>
                 <input
+                  id="endereco"
                   type="text"
                   value={endereco}
                   onChange={(e) => setEndereco(e.target.value)}
@@ -366,10 +368,11 @@ const NovaDenunciaPage: React.FC = () => {
 
               {/* Bairro */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="bairro" className="block text-sm font-medium text-gray-700 mb-2">
                   Bairro *
                 </label>
                 <input
+                  id="bairro"
                   type="text"
                   value={bairro}
                   onChange={(e) => setBairro(e.target.value)}
@@ -383,10 +386,11 @@ const NovaDenunciaPage: React.FC = () => {
 
               {/* Descrição */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="descricao" className="block text-sm font-medium text-gray-700 mb-2">
                   Descrição do problema *
                 </label>
                 <textarea
+                  id="descricao"
                   value={descricao}
                   onChange={(e) => setDescricao(e.target.value)}
                   placeholder="Descreva o que você viu (máximo 500 caracteres)"
@@ -395,8 +399,9 @@ const NovaDenunciaPage: React.FC = () => {
                   required
                   minLength={10}
                   maxLength={500}
+                  aria-describedby="descricao-count"
                 />
-                <p className="text-sm text-gray-500 mt-1">
+                <p id="descricao-count" className="text-sm text-gray-500 mt-1">
                   {descricao.length}/500 caracteres
                 </p>
               </div>
@@ -454,22 +459,30 @@ const NovaDenunciaPage: React.FC = () => {
 
                   {!contatoAnonimo && (
                     <>
-                      <input
-                        type="text"
-                        value={contatoNome}
-                        onChange={(e) => setContatoNome(e.target.value)}
-                        placeholder="Seu nome"
-                        className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        maxLength={200}
-                      />
-                      <input
-                        type="tel"
-                        value={contatoTelefone}
-                        onChange={(e) => setContatoTelefone(e.target.value)}
-                        placeholder="Telefone com DDD"
-                        className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        maxLength={20}
-                      />
+                      <div>
+                        <label htmlFor="contatoNome" className="block text-sm font-medium text-gray-700 mb-2">Nome</label>
+                        <input
+                          id="contatoNome"
+                          type="text"
+                          value={contatoNome}
+                          onChange={(e) => setContatoNome(e.target.value)}
+                          placeholder="Seu nome"
+                          className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          maxLength={200}
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="contatoTelefone" className="block text-sm font-medium text-gray-700 mb-2">Telefone</label>
+                        <input
+                          id="contatoTelefone"
+                          type="tel"
+                          value={contatoTelefone}
+                          onChange={(e) => setContatoTelefone(e.target.value)}
+                          placeholder="Telefone com DDD"
+                          className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          maxLength={20}
+                        />
+                      </div>
                     </>
                   )}
                 </div>

@@ -2,6 +2,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { useMemo, useState } from 'react'
 import { NAVIGATION } from '@/navigation/map'
 import Icon from '@/components/ui/Icon'
+import pkg from '../../../package.json'
 
 const GROUP_ORDER = ['Web Mapas', 'Dados', 'Vigilância', 'Operações', 'Serviços Técnicos', 'Sistema', 'Outros']
 
@@ -41,10 +42,6 @@ export default function AppSidebar() {
     return entries.sort((a, b) => GROUP_ORDER.indexOf(a[0]) - GROUP_ORDER.indexOf(b[0]))
   }, [grouped])
 
-  const toggleSidebar = () => {
-    document.documentElement.classList.toggle('sidebar-collapsed')
-  }
-
   return (
     <aside id="app-sidebar" data-app-nav="primary">
       <div className="app-sidebar-inner">
@@ -53,10 +50,15 @@ export default function AppSidebar() {
             <button
               className="collapse-btn"
               aria-label="Recolher menu principal"
+              aria-expanded="true"
               title="Recolher menu"
-              onClick={toggleSidebar}
+              onClick={(e) => {
+                const next = document.documentElement.classList.toggle('sidebar-collapsed')
+                e.currentTarget.setAttribute('aria-expanded', (!next).toString())
+              }}
             >
-              <Icon name="ChevronsLeft" size={16} />
+              <Icon name="ChevronsLeft" size={16} className="icon-left" />
+              <Icon name="ChevronsRight" size={16} className="icon-right" />
             </button>
             <span className="brand-name">SIVEPI</span>
           </div>
@@ -95,7 +97,7 @@ export default function AppSidebar() {
         <div className="app-footer">
           <div className="legal">
             <div className="product">TechDengue</div>
-            <div className="meta">v0.1.0 · © 2025</div>
+            <div className="meta">v{pkg.version} · © {new Date().getFullYear()}</div>
             <div className="rights">Todos os direitos reservados</div>
           </div>
           <div className="links">

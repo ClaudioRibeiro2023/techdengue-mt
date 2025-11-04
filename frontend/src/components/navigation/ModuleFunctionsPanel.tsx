@@ -6,13 +6,15 @@ import type { AppModule, FunctionItem } from '@/navigation/types'
 
 function resolveActiveModule(pathname: string): AppModule | undefined {
   const segs = pathname.split('/').filter(Boolean)
-  if (['mapa', 'dashboard', 'etl', 'relatorios', 'denuncia'].includes(segs[0])) {
+  if (['mapa', 'dashboard', 'etl', 'relatorios', 'denuncia', 'docs', 'lgpd'].includes(segs[0])) {
     const map: Record<string, string> = {
       mapa: 'mapa-vivo',
       dashboard: 'dashboard-executivo',
       etl: 'etl-integracao',
       relatorios: 'relatorios',
       denuncia: 'e-denuncia',
+      docs: 'documentacao',
+      lgpd: 'lgpd',
     }
     return NAVIGATION.modules.find(m => m.id === map[segs[0]])
   }
@@ -70,10 +72,15 @@ export default function ModuleFunctionsPanel() {
         <button
           className="collapse-btn"
           aria-label="Recolher painel de ferramentas"
+          aria-expanded="true"
           title="Recolher"
-          onClick={() => document.documentElement.classList.toggle('functions-collapsed')}
+          onClick={(e) => {
+            const next = document.documentElement.classList.toggle('functions-collapsed')
+            e.currentTarget.setAttribute('aria-expanded', (!next).toString())
+          }}
         >
-          <Icon name="ChevronsLeft" size={20} />
+          <Icon name="ChevronsLeft" size={20} className="icon-left" />
+          <Icon name="ChevronsRight" size={20} className="icon-right" />
         </button>
         <h2>Ferramentas</h2>
       </div>

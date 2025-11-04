@@ -27,6 +27,8 @@ export default function Header() {
       '/etl': 'etl-integracao',
       '/relatorios': 'relatorios',
       '/denuncia': 'e-denuncia',
+      '/docs': 'documentacao',
+      '/lgpd': 'lgpd',
     }
     const matched = Object.keys(mapByPrefix).find(p => path.startsWith(p))
     if (matched) return NAVIGATION.modules.find(m => m.id === mapByPrefix[matched])
@@ -57,7 +59,7 @@ export default function Header() {
           {/* Logo and Brand */}
           <div className="flex items-center gap-4">
             <Link to="/" className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: 'var(--brand-primary)' }}>
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-[var(--brand-primary)]">
                 <span className="text-2xl">🦟</span>
               </div>
               <div>

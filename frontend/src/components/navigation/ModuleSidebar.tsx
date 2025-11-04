@@ -12,6 +12,8 @@ function resolveActiveModule(pathname: string): AppModule | undefined {
     '/etl': 'etl-integracao',
     '/relatorios': 'relatorios',
     '/denuncia': 'e-denuncia',
+    '/docs': 'documentacao',
+    '/lgpd': 'lgpd',
   }
   const matchedPrefix = Object.keys(mapByPrefix).find(p => pathname.startsWith(p))
   if (matchedPrefix) return NAVIGATION.modules.find(m => m.id === mapByPrefix[matchedPrefix])
@@ -31,6 +33,8 @@ const categoryLabel: Record<NavCategory, string> = {
   CONTROLE: 'Controle',
   OPERACIONAL: 'Operacional',
 }
+
+const CATEGORY_ORDER: NavCategory[] = ['ANALISE', 'MAPEAMENTO', 'INDICADORES', 'CONTROLE', 'OPERACIONAL']
 
 function groupByCategory(items: FunctionItem[]) {
   const groups: Record<string, FunctionItem[]> = {}
@@ -76,13 +80,11 @@ export default function ModuleSidebar() {
       </div>
 
       <div className="p-3">
-        {Object.entries(groups).map(([cat, items]) => (
+        {CATEGORY_ORDER.filter(c => groups[c]?.length).map((cat) => (
           <div key={cat} className="category-section">
-            <div className="category-title">
-              {categoryLabel[cat as NavCategory] || cat}
-            </div>
+            <div className="category-title">{categoryLabel[cat]}</div>
             <nav>
-              {items.map(it => (
+              {groups[cat]!.map(it => (
                 <Link
                   key={it.id}
                   to={it.path.includes(':') ? '#' : it.path}
