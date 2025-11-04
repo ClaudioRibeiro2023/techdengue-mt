@@ -49,13 +49,18 @@ export default function AppSidebar() {
     <aside id="app-sidebar" data-app-nav="primary">
       <div className="app-sidebar-inner">
         <div className="app-brand">
-          <span className="brand-name">SIVEPI</span>
-          <span className="brand-sub">Sistema Integrado de Vigilância</span>
-          <div className="mt-2">
-            <button className="collapse-btn" title="Recolher menu" onClick={toggleSidebar}>
+          <div className="app-brand-row">
+            <button
+              className="collapse-btn"
+              aria-label="Recolher menu principal"
+              title="Recolher menu"
+              onClick={toggleSidebar}
+            >
               <Icon name="ChevronsLeft" size={16} />
             </button>
+            <span className="brand-name">SIVEPI</span>
           </div>
+          <span className="brand-sub">Sistema Integrado de Vigilância</span>
         </div>
 
         <div className="app-search">
@@ -86,6 +91,24 @@ export default function AppSidebar() {
             </nav>
           </div>
         ))}
+
+        <div className="app-footer">
+          <div className="legal">
+            <div className="product">TechDengue</div>
+            <div className="meta">v0.1.0 · © 2025</div>
+            <div className="rights">Todos os direitos reservados</div>
+          </div>
+          <div className="links">
+            <Link to="/docs" title="Documentação" className="footer-link">
+              <Icon name="BookOpen" size={14} />
+              <span>Documentação</span>
+            </Link>
+            <Link to="/lgpd" title="LGPD" className="footer-link">
+              <Icon name="ShieldCheck" size={14} />
+              <span>LGPD</span>
+            </Link>
+          </div>
+        </div>
       </div>
     </aside>
   )

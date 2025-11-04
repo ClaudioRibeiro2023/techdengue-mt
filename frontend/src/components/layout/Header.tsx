@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import UserMenu from '@/components/auth/UserMenu'
-import { Menu, X, Map, BarChart3, Upload, AlertTriangle, Settings, Sun, Moon, ChevronsLeft, ChevronsRight, ChevronRight, type LucideIcon } from 'lucide-react'
+import { Menu, X, Map, BarChart3, LayoutDashboard, Upload, AlertTriangle, Settings, Sun, Moon, ChevronsLeft, ChevronsRight, ChevronRight, type LucideIcon } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { NAVIGATION } from '@/navigation/map'
 
@@ -15,7 +15,7 @@ export default function Header() {
 
   const iconByModule: Record<string, LucideIcon> = {
     'mapa-vivo': Map,
-    'dashboard-executivo': BarChart3,
+    'dashboard-executivo': LayoutDashboard,
     'etl-integracao': Upload,
     'relatorios': BarChart3,
   }

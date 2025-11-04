@@ -194,6 +194,34 @@ export const NAVIGATION: NavigationMap = {
         { id: 'qualidade-dados', name: 'Qualidade de Dados', path: '/modulos/observabilidade?view=dataQuality', category: 'CONTROLE', icon: 'ShieldCheck' },
       ],
     },
+
+    {
+      id: 'documentacao',
+      name: 'Documentação',
+      description: 'Guias, glossário técnico e API',
+      path: '/docs',
+      icon: 'BookOpen',
+      group: 'Serviços Técnicos',
+      functions: [
+        { id: 'guia-usuario', name: 'Guia do Usuário', path: '/docs?view=usuario', category: 'OPERACIONAL', icon: 'FileText' },
+        { id: 'glossario', name: 'Glossário Técnico', path: '/docs?view=glossario', category: 'CONTROLE', icon: 'BookMarked' },
+        { id: 'api', name: 'API Reference', path: '/docs?view=api', category: 'CONTROLE', icon: 'Code' },
+      ],
+    },
+
+    {
+      id: 'lgpd',
+      name: 'LGPD',
+      description: 'Privacidade, termos e base legal',
+      path: '/lgpd',
+      icon: 'ShieldCheck',
+      group: 'Serviços Técnicos',
+      functions: [
+        { id: 'politica-privacidade', name: 'Política de Privacidade', path: '/lgpd?view=privacidade', category: 'CONTROLE', icon: 'Shield' },
+        { id: 'termos-uso', name: 'Termos de Uso', path: '/lgpd?view=termos', category: 'CONTROLE', icon: 'FileText' },
+        { id: 'base-legal', name: 'Base Legal', path: '/lgpd?view=base-legal', category: 'CONTROLE', icon: 'Scale' },
+      ],
+    },
   ],
 }
 

@@ -4,8 +4,6 @@ import { NAVIGATION } from '@/navigation/map'
 import Icon from '@/components/ui/Icon'
 import type { AppModule, FunctionItem } from '@/navigation/types'
 
-const DEFAULT_MODULE_ID = 'mapa-vivo'
-
 function resolveActiveModule(pathname: string): AppModule | undefined {
   const segs = pathname.split('/').filter(Boolean)
   if (['mapa', 'dashboard', 'etl', 'relatorios', 'denuncia'].includes(segs[0])) {
@@ -29,10 +27,7 @@ export default function ModuleFunctionsPanel() {
   const { pathname, search } = location
 
   const module = useMemo(() => {
-    return (
-      resolveActiveModule(pathname) ||
-      NAVIGATION.modules.find(m => m.id === DEFAULT_MODULE_ID)
-    )
+    return resolveActiveModule(pathname)
   }, [pathname])
 
   const isActive = (path: string) => {
@@ -72,14 +67,15 @@ export default function ModuleFunctionsPanel() {
   return (
     <div className="module-functions-panel">
       <div className="functions-header">
-        <h2>Ferramentas</h2>
         <button
           className="collapse-btn"
+          aria-label="Recolher painel de ferramentas"
           title="Recolher"
           onClick={() => document.documentElement.classList.toggle('functions-collapsed')}
         >
-          <Icon name="ChevronLeft" size={20} />
+          <Icon name="ChevronsLeft" size={20} />
         </button>
+        <h2>Ferramentas</h2>
       </div>
 
       {CATEGORY_ORDER.filter(cat => grouped[cat]?.length).map(cat => (
