@@ -15,6 +15,8 @@ import HomePage from '@/pages/HomePage'
 import ProfilePage from '@/pages/ProfilePage'
 import DashboardEPI from '@/pages/DashboardEPI'
 import NovaDenunciaPage from '@/pages/eDenuncia/NovaDenunciaPage'
+import DocsPage from '@/pages/DocsPage'
+import LGPDPage from '@/pages/LGPDPage'
 
 // Check if demo mode is enabled
 const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true'
@@ -103,6 +105,8 @@ export default function App() {
           { path: '/dashboard', element: <RouteWrapper><DashboardEPI /></RouteWrapper> },
           { path: '/etl', element: <RoleRouteWrapper roles={['ADMIN', 'GESTOR']}><ETLPage /></RoleRouteWrapper> },
           { path: '/relatorios', element: <RouteWrapper><RelatoriosPage /></RouteWrapper> },
+          { path: '/docs', element: <RouteWrapper><DocsPage /></RouteWrapper> },
+          { path: '/lgpd', element: <RouteWrapper><LGPDPage /></RouteWrapper> },
           // e-Denúncia pública (sem wrapper de proteção)
           { path: '/denuncia', element: <NovaDenunciaPage /> },
           { path: '/denuncia/consultar/:protocolo', element: <ConsultarDenunciaPage /> },

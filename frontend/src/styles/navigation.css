@@ -291,6 +291,29 @@ html.sidebar-collapsed #app-sidebar .app-brand .collapse-btn .icon-right { displ
   background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
 }
 
+#app-submenu .submenu-header-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+#app-submenu .collapse-btn {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #0f172a;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition: var(--nav-transition);
+}
+#app-submenu .collapse-btn:hover { background: #e2e8f0; }
+#app-submenu .collapse-btn .icon-right { display: none; }
+html.subnav-collapsed #app-submenu .collapse-btn .icon-left { display: none; }
+html.subnav-collapsed #app-submenu .collapse-btn .icon-right { display: inline; }
+
 #app-submenu .module-header .module-label {
   font-size: 0.625rem;
   text-transform: uppercase;
@@ -364,6 +387,15 @@ html.sidebar-collapsed #app-sidebar .app-brand .collapse-btn .icon-right { displ
 #app-submenu nav a.active svg {
   color: #1e40af;
 }
+
+/* Collapsed states for Submenu */
+html.subnav-collapsed #app-submenu[data-app-nav="secondary"] { width: 64px; }
+html.subnav-collapsed #app-submenu .module-label,
+html.subnav-collapsed #app-submenu .module-name,
+html.subnav-collapsed #app-submenu .module-description,
+html.subnav-collapsed #app-submenu .category-title,
+html.subnav-collapsed #app-submenu .label { display: none; }
+html.subnav-collapsed #app-submenu nav a { justify-content: center; }
 
 /* ===== MODULE FUNCTIONS PANEL (Cards) ===== */
 .module-functions-panel {

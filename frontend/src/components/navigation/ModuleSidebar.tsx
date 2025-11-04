@@ -72,8 +72,25 @@ export default function ModuleSidebar() {
   return (
     <aside id="app-submenu" data-app-nav="secondary" className="hidden lg:block">
       <div className="module-header">
-        <div className="module-label">Módulos</div>
-        <div className="module-name">{module.name}</div>
+        <div className="submenu-header-row">
+          <button
+            className="collapse-btn"
+            aria-label="Recolher submenu"
+            aria-expanded="true"
+            title="Recolher"
+            onClick={(e) => {
+              const next = document.documentElement.classList.toggle('subnav-collapsed')
+              e.currentTarget.setAttribute('aria-expanded', (!next).toString())
+            }}
+          >
+            <Icon name="ChevronsLeft" size={16} className="icon-left" />
+            <Icon name="ChevronsRight" size={16} className="icon-right" />
+          </button>
+          <div>
+            <div className="module-label">Módulos</div>
+            <div className="module-name">{module.name}</div>
+          </div>
+        </div>
         {module.description && (
           <div className="module-description">{module.description}</div>
         )}
@@ -93,7 +110,7 @@ export default function ModuleSidebar() {
                   onClick={e => it.path.includes(':') && e.preventDefault()}
                 >
                   {it.icon && <Icon name={it.icon} size={16} />}
-                  {it.name}
+                  <span className="label">{it.name}</span>
                 </Link>
               ))}
             </nav>
