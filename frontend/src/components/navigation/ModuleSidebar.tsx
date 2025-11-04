@@ -110,7 +110,11 @@ export default function ModuleSidebar() {
                   onClick={e => it.path.includes(':') && e.preventDefault()}
                 >
                   {it.icon && <Icon name={it.icon} size={16} />}
-                  <span className="label">{it.name}</span>
+                  <div className="link-text">
+                    <span className="label">{it.name}</span>
+                    {it.subtitle && <span className="item-subtitle">{it.subtitle}</span>}
+                  </div>
+                  <span className="item-category">{categoryLabel[((it.category || 'OPERACIONAL') as NavCategory)]}</span>
                 </Link>
               ))}
             </nav>

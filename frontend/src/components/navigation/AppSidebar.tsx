@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { NAVIGATION } from '@/navigation/map'
 import Icon from '@/components/ui/Icon'
 import pkg from '../../../package.json'
@@ -41,6 +41,62 @@ export default function AppSidebar() {
     const entries = Object.entries(grouped)
     return entries.sort((a, b) => GROUP_ORDER.indexOf(a[0]) - GROUP_ORDER.indexOf(b[0]))
   }, [grouped])
+
+  useEffect(() => {
+    const root = document.documentElement
+    const body = document.body
+    const sidebar = document.getElementById('app-sidebar')
+
+    const getFocusable = () => Array.from((sidebar?.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    )) || [])
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (!root.classList.contains('mobile-sidebar-open')) return
+      if (e.key === 'Escape') {
+        root.classList.remove('mobile-sidebar-open')
+        e.preventDefault()
+        return
+      }
+      if (e.key !== 'Tab') return
+      const focusable = getFocusable()
+      if (focusable.length === 0) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      const active = document.activeElement as HTMLElement | null
+      if (e.shiftKey) {
+        if (!active || active === first) {
+          last.focus()
+          e.preventDefault()
+        }
+      } else {
+        if (!active || active === last) {
+          first.focus()
+          e.preventDefault()
+        }
+      }
+    }
+
+    const observer = new MutationObserver(() => {
+      const open = root.classList.contains('mobile-sidebar-open')
+      if (open) {
+        body.style.overflow = 'hidden'
+        const focusable = getFocusable()
+        if (focusable.length) focusable[0].focus()
+        document.addEventListener('keydown', onKeyDown)
+      } else {
+        body.style.overflow = ''
+        document.removeEventListener('keydown', onKeyDown)
+      }
+    })
+
+    observer.observe(root, { attributes: true, attributeFilter: ['class'] })
+    return () => {
+      observer.disconnect()
+      document.removeEventListener('keydown', onKeyDown)
+      body.style.overflow = ''
+    }
+  }, [])
 
   return (
     <aside id="app-sidebar" data-app-nav="primary">

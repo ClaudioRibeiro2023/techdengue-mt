@@ -4,12 +4,14 @@ import UserMenu from '@/components/auth/UserMenu'
 import { Menu, X, Map, BarChart3, LayoutDashboard, Upload, AlertTriangle, Settings, Sun, Moon, ChevronsLeft, ChevronsRight, ChevronRight, type LucideIcon } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { NAVIGATION } from '@/navigation/map'
+import { useWebMap } from '@/modules/webmap/context'
 
 export default function Header() {
   const { isAuthenticated } = useAuth()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [dark, setDark] = useState(false)
   const { pathname } = useLocation()
+  const webmap = useWebMap()
 
   const topModules = useMemo(() => NAVIGATION.modules.filter(m => m.topNav), [])
 
@@ -52,6 +54,10 @@ export default function Header() {
     document.documentElement.classList.toggle('functions-collapsed')
   }
 
+  const toggleMobileSidebar = () => {
+    document.documentElement.classList.toggle('mobile-sidebar-open')
+  }
+
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-[920]">
       <div className="px-3 sm:px-4 lg:px-6">
@@ -73,6 +79,10 @@ export default function Header() {
 
           {/* Right Side */}
           <div className="flex items-center gap-2">
+            {/* Mobile: open primary sidebar as drawer */}
+            <button onClick={toggleMobileSidebar} className="md:hidden p-2 rounded-lg hover:bg-gray-100" title="Menu">
+              <Menu className="w-6 h-6" />
+            </button>
             {/* Collapses */}
             <button onClick={toggleSidebar} className="hidden md:inline-flex p-2 rounded-lg hover:bg-gray-100" title="Recolher menu principal">
               <ChevronsLeft className="w-5 h-5" />
@@ -140,11 +150,13 @@ export default function Header() {
               )}
               <span className="font-semibold text-gray-700">{activeModule?.name || 'Início'}</span>
             </nav>
-            <div className="flex items-center gap-2">
-              <button className="px-3 py-1.5 text-sm rounded-md border border-gray-200 hover:bg-gray-50">Filtros</button>
-              <button className="px-3 py-1.5 text-sm rounded-md border border-gray-200 hover:bg-gray-50">Análise</button>
-              <button className="px-3 py-1.5 text-sm rounded-md border border-gray-200 hover:bg-gray-50">Dados</button>
-            </div>
+            {activeModule?.id === 'mapa-vivo' && (
+              <div id="filters-slot" className="flex items-center gap-2">
+                <button onClick={() => webmap.openPanel('filters')} className="px-3 py-1.5 text-sm rounded-md border border-gray-200 hover:bg-gray-50">Filtros</button>
+                <button onClick={() => webmap.openPanel('layers')} className="px-3 py-1.5 text-sm rounded-md border border-gray-200 hover:bg-gray-50">Camadas</button>
+                <button onClick={() => webmap.doExport()} className="px-3 py-1.5 text-sm rounded-md border border-gray-200 hover:bg-gray-50">Exportar</button>
+              </div>
+            )}
           </div>
         )}
 

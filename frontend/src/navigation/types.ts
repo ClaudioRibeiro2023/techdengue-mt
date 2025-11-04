@@ -6,6 +6,7 @@ export type FunctionItem = {
   path: string
   category?: NavCategory
   icon?: string
+  subtitle?: string
 }
 
 export type AppModule = {

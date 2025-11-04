@@ -360,11 +360,11 @@ html.subnav-collapsed #app-submenu .collapse-btn .icon-right { display: inline; 
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.625rem 0.75rem;
-  border-radius: 10px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #475569;
+  padding: 0.75rem 0.875rem;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #0f172a;
   text-decoration: none;
   transition: var(--nav-transition);
 }
@@ -375,18 +375,34 @@ html.subnav-collapsed #app-submenu .collapse-btn .icon-right { display: inline; 
 }
 
 #app-submenu nav a.active {
-  background: linear-gradient(135deg, #dbeafe 0%, #e0f2fe 100%);
-  color: #1e40af;
+  background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-700) 100%);
+  color: #ffffff;
   font-weight: 700;
-  box-shadow: 
-    0 2px 8px rgba(33, 150, 243, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(59, 130, 246, 0.2);
+  box-shadow: 0 10px 20px rgba(0, 135, 168, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-#app-submenu nav a.active svg {
-  color: #1e40af;
+#app-submenu nav a.active svg { color: #ffffff; }
+
+#app-submenu nav a .label { flex: 1; }
+#app-submenu nav a .link-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
 }
+#app-submenu nav a .item-subtitle {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+#app-submenu nav a .item-category {
+  margin-left: auto;
+  font-size: 0.625rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+#app-submenu nav a.active .item-category { color: #e0f2fe; }
 
 /* Collapsed states for Submenu */
 html.subnav-collapsed #app-submenu[data-app-nav="secondary"] { width: 64px; }
@@ -766,6 +782,35 @@ html.theme-dark main.flex-1 {
 }
 
 @media (max-width: 768px) {
+  /* Primary sidebar becomes a drawer */
+  #app-sidebar[data-app-nav="primary"] {
+    position: fixed;
+    left: 0;
+    top: 64px;
+    height: calc(100vh - 64px);
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+  }
+
+  html.mobile-sidebar-open #app-sidebar[data-app-nav="primary"] {
+    transform: translateX(0);
+  }
+
+  /* Overlay */
+  .mobile-overlay {
+    position: fixed;
+    inset: 64px 0 0 0;
+    background: rgba(0,0,0,0.4);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+    z-index: 905;
+  }
+  html.mobile-sidebar-open .mobile-overlay {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
   #app-submenu[data-app-nav="secondary"] {
     position: fixed;
     left: 0;
