@@ -1,5 +1,5 @@
 import React from 'react';
-import { Activity, AlertTriangle, TrendingUp, Users, AlertCircle, Heart, TrendingDown, Minus } from 'lucide-react';
+import { Activity, AlertTriangle, TrendingUp, Users, AlertCircle, Heart, TrendingDown, Minus, type LucideIcon } from 'lucide-react';
 
 interface KPIVariacao {
   valor_atual: number;
@@ -30,7 +30,7 @@ interface KPICardsProps {
   };
 }
 
-const iconMap: Record<string, any> = {
+const iconMap: Record<string, LucideIcon> = {
   Activity,
   AlertTriangle,
   TrendingUp,
@@ -39,15 +39,26 @@ const iconMap: Record<string, any> = {
   Heart,
 };
 
+// Mapa de classes Tailwind para cores conhecidas
+const COLOR_CLASSES: Record<string, { border: string; bg: string; text: string }> = {
+  '#2196F3': { border: 'border-blue-500', bg: 'bg-blue-500', text: 'text-blue-500' },
+  '#4CAF50': { border: 'border-green-500', bg: 'bg-green-500', text: 'text-green-500' },
+  '#FFC107': { border: 'border-amber-500', bg: 'bg-amber-500', text: 'text-amber-500' },
+  '#FF9800': { border: 'border-orange-500', bg: 'bg-orange-500', text: 'text-orange-500' },
+  '#F44336': { border: 'border-red-500', bg: 'bg-red-500', text: 'text-red-500' },
+};
+
 const KPICards: React.FC<KPICardsProps> = ({ data }) => {
   const renderCard = (card: KPICard) => {
     const Icon = card.icone && iconMap[card.icone] ? iconMap[card.icone] : Activity;
+    const defaultColor = '#2196F3';
+    const colorKey = (card.cor && COLOR_CLASSES[card.cor]) ? card.cor : defaultColor;
+    const colors = COLOR_CLASSES[colorKey];
     
     return (
       <div
         key={card.titulo}
-        className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow"
-        style={{ borderTop: `4px solid ${card.cor || '#2196F3'}` }}
+        className={`bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow border-t-4 ${colors.border}`}
       >
         {/* Header com ícone */}
         <div className="flex items-start justify-between mb-4">
@@ -58,11 +69,8 @@ const KPICards: React.FC<KPICardsProps> = ({ data }) => {
               <span className="text-lg font-normal text-gray-500 ml-2">{card.unidade}</span>
             </p>
           </div>
-          <div
-            className="p-3 rounded-lg"
-            style={{ backgroundColor: `${card.cor}20` }}
-          >
-            <Icon className="w-6 h-6" style={{ color: card.cor }} />
+          <div className={`p-3 rounded-lg ${colors.bg} bg-opacity-20`}>
+            <Icon className={`w-6 h-6 ${colors.text}`} />
           </div>
         </div>
 

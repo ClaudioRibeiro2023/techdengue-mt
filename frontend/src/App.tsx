@@ -3,6 +3,8 @@ import { AuthProvider } from '@/contexts/AuthContext'
 import ProtectedRoute from '@/components/auth/ProtectedRoute'
 import MainLayout from '@/components/layout/MainLayout'
 import { UserRole } from '@/config/auth'
+import MapaVivo from '@/pages/MapaVivo'
+import ModuleLandingPage from '@/pages/modules/ModuleLandingPage'
 
 // Auth Pages
 import LoginPage from '@/pages/LoginPage'
@@ -22,23 +24,6 @@ import LGPDPage from '@/pages/LGPDPage'
 const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true'
 
 // Placeholder pages for other modules (to be implemented)
-function MapaPage() {
-  return (
-    <>
-      <div className="page-header">
-        <h1 className="page-title">Mapa Vivo</h1>
-        <p className="page-subtitle">WebMapa Unificado - Navegação e análises espaciais</p>
-        <div className="development-notice">
-          <span>⚠️</span>
-          <span>Em Desenvolvimento</span>
-        </div>
-      </div>
-      <div className="content-section">
-        <p>Selecione uma função no painel lateral para começar.</p>
-      </div>
-    </>
-  )
-}
 function ETLPage() {
   return (
     <>
@@ -75,13 +60,15 @@ function RelatoriosPage() {
 }
 
 export default function App() {
-  // Wrapper component for demo mode
+  // Wrapper component for demo mode and E2E tests
   const RouteWrapper = ({ children }: { children: React.ReactNode }) => {
-    return DEMO_MODE ? <>{children}</> : <ProtectedRoute>{children}</ProtectedRoute>
+    const MODE = import.meta.env.MODE
+    return (DEMO_MODE || MODE === 'e2e') ? <>{children}</> : <ProtectedRoute>{children}</ProtectedRoute>
   }
 
   const RoleRouteWrapper = ({ children, roles }: { children: React.ReactNode; roles?: UserRole[] }) => {
-    return DEMO_MODE ? <>{children}</> : <ProtectedRoute requiredRoles={roles}>{children}</ProtectedRoute>
+    const MODE = import.meta.env.MODE
+    return (DEMO_MODE || MODE === 'e2e') ? <>{children}</> : <ProtectedRoute requiredRoles={roles}>{children}</ProtectedRoute>
   }
 
   const router = createBrowserRouter(
@@ -100,8 +87,9 @@ export default function App() {
         element: <MainLayout />,
         children: [
           { path: '/', element: <RouteWrapper><HomePage /></RouteWrapper> },
+          { path: '/modulos/:moduleId', element: <RouteWrapper><ModuleLandingPage /></RouteWrapper> },
           { path: '/profile', element: <RouteWrapper><ProfilePage /></RouteWrapper> },
-          { path: '/mapa', element: <RouteWrapper><MapaPage /></RouteWrapper> },
+          { path: '/mapa', element: <RouteWrapper><MapaVivo /></RouteWrapper> },
           { path: '/dashboard', element: <RouteWrapper><DashboardEPI /></RouteWrapper> },
           { path: '/etl', element: <RoleRouteWrapper roles={['ADMIN', 'GESTOR']}><ETLPage /></RoleRouteWrapper> },
           { path: '/relatorios', element: <RouteWrapper><RelatoriosPage /></RouteWrapper> },

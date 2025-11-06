@@ -1,4 +1,5 @@
 import type { NavigationMap } from './types'
+import type { UserRole } from '@/config/auth'
 
 export const NAVIGATION: NavigationMap = {
   modules: [
@@ -63,6 +64,7 @@ export const NAVIGATION: NavigationMap = {
       icon: 'Database',
       badge: 'BETA',
       group: 'Serviços Técnicos',
+      roles: ['ADMIN'] as UserRole[],
       functions: [
         { id: 'import-sinan', name: 'Importadores SINAN', path: '/etl?src=sinan', category: 'OPERACIONAL', icon: 'Upload' },
         { id: 'import-liraa', name: 'Importadores LIRAa', path: '/etl?src=liraa', category: 'OPERACIONAL', icon: 'Upload' },
@@ -83,11 +85,12 @@ export const NAVIGATION: NavigationMap = {
       icon: 'Brain',
       badge: 'IA',
       group: 'Dados',
+      roles: ['GESTOR', 'VIGILANCIA', 'ADMIN'] as UserRole[],
       functions: [
-        { id: 'nowcasting-rt', name: 'Nowcasting / Rt', path: '/modulos/previsao-simulacao?view=nowcasting', category: 'ANALISE', icon: 'Zap' },
-        { id: 'previsao-2-4sem', name: 'Previsão 2-4 semanas', path: '/modulos/previsao-simulacao?view=forecast', category: 'ANALISE', icon: 'TrendingUp' },
-        { id: 'cenarios-intervencao', name: 'Cenários de Intervenção', path: '/modulos/previsao-simulacao?view=scenarios', category: 'ANALISE', icon: 'GitBranch' },
-        { id: 'risco-climatico', name: 'Risco Climático', path: '/modulos/previsao-simulacao?view=climate', category: 'ANALISE', icon: 'Cloud' },
+        { id: 'nowcasting-rt', name: 'Nowcasting / Rt', subtitle: 'Atraso de notificação e transmissibilidade', path: '/modulos/previsao-simulacao?view=nowcasting', category: 'ANALISE', icon: 'Zap' },
+        { id: 'previsao-2-4sem', name: 'Previsão 2–4 semanas', subtitle: 'Casos/risco por município', path: '/modulos/previsao-simulacao?view=forecast', category: 'ANALISE', icon: 'TrendingUp' },
+        { id: 'cenarios-intervencao', name: 'Cenários de Intervenção', subtitle: 'Simulação de impacto', path: '/modulos/previsao-simulacao?view=scenarios', category: 'ANALISE', icon: 'GitBranch' },
+        { id: 'risco-climatico', name: 'Risco Climático', subtitle: 'Camadas ambientais (chuva/temperatura)', path: '/modulos/previsao-simulacao?view=climate', category: 'ANALISE', icon: 'Cloud' },
       ],
     },
     // VIGILÂNCIA
@@ -98,6 +101,7 @@ export const NAVIGATION: NavigationMap = {
       path: '/modulos/vigilancia-entomologica',
       icon: 'Bug',
       group: 'Vigilância',
+      roles: ['VIGILANCIA', 'GESTOR'] as UserRole[],
       functions: [
         { id: 'entomo-visao-geral', name: 'Visão Geral', subtitle: 'Panorama de infestação e tendência', path: '/modulos/vigilancia-entomologica?view=overview', category: 'ANALISE', icon: 'Eye' },
         { id: 'analise-sazonal', name: 'Análise Sazonal', subtitle: 'Séries temporais por município/bairro', path: '/modulos/vigilancia-entomologica?view=sazonal', category: 'ANALISE', icon: 'Calendar' },
@@ -120,6 +124,7 @@ export const NAVIGATION: NavigationMap = {
       path: '/modulos/vigilancia-epidemiologica',
       icon: 'Activity',
       group: 'Vigilância',
+      roles: ['VIGILANCIA', 'GESTOR'] as UserRole[],
       functions: [
         { id: 'epi-visao-geral', name: 'Visão Geral', subtitle: 'Incidência, letalidade, Rt/nowcasting', path: '/modulos/vigilancia-epidemiologica?view=overview', category: 'ANALISE', icon: 'Eye' },
         { id: 'epi-nowcasting', name: 'Nowcasting / Rt', subtitle: 'Transmissibilidade e atraso', path: '/modulos/vigilancia-epidemiologica?view=nowcasting', category: 'ANALISE', icon: 'Activity' },
@@ -154,12 +159,13 @@ export const NAVIGATION: NavigationMap = {
       path: '/modulos/resposta-operacional',
       icon: 'Truck',
       group: 'Operações',
+      roles: ['CAMPO', 'GESTOR'] as UserRole[],
       functions: [
-        { id: 'triagem-despacho', name: 'Triagem & Despacho', path: '/modulos/resposta-operacional?view=triagem', category: 'OPERACIONAL', icon: 'ClipboardList' },
-        { id: 'planejamento-campo', name: 'Planejamento de Campo', path: '/modulos/resposta-operacional?view=planejamento', category: 'OPERACIONAL', icon: 'Calendar' },
-        { id: 'execucao-mobile', name: 'Execução (Mobile)', path: '/modulos/resposta-operacional?view=execucao', category: 'OPERACIONAL', icon: 'Smartphone' },
-        { id: 'acompanhamento-atividades', name: 'Acompanhamento', path: '/modulos/resposta-operacional?view=acompanhamento', category: 'OPERACIONAL', icon: 'CheckSquare' },
-        { id: 'avaliacao-impacto', name: 'Avaliação de Impacto', path: '/modulos/resposta-operacional?view=impacto', category: 'ANALISE', icon: 'Target' },
+        { id: 'triagem-despacho', name: 'Triagem & Despacho', subtitle: 'Regras de prioridade e distribuição', path: '/modulos/resposta-operacional?view=triagem', category: 'OPERACIONAL', icon: 'ClipboardList' },
+        { id: 'planejamento-campo', name: 'Planejamento de Campo', subtitle: 'Roteirização, zonas-alvo', path: '/modulos/resposta-operacional?view=planejamento', category: 'OPERACIONAL', icon: 'Calendar' },
+        { id: 'execucao-mobile', name: 'Execução (Mobile)', subtitle: 'Check-ins, coleta e fotos em campo', path: '/modulos/resposta-operacional?view=execucao', category: 'OPERACIONAL', icon: 'Smartphone' },
+        { id: 'acompanhamento-atividades', name: 'Acompanhamento', subtitle: 'Status de atividades e produtividade', path: '/modulos/resposta-operacional?view=acompanhamento', category: 'OPERACIONAL', icon: 'CheckSquare' },
+        { id: 'avaliacao-impacto', name: 'Avaliação de Impacto', subtitle: 'Antes/depois por área e período', path: '/modulos/resposta-operacional?view=impacto', category: 'ANALISE', icon: 'Target' },
       ],
     },
 
@@ -171,11 +177,12 @@ export const NAVIGATION: NavigationMap = {
       path: '/modulos/administracao',
       icon: 'Settings',
       group: 'Serviços Técnicos',
+      roles: ['ADMIN', 'GESTOR'] as UserRole[],
       functions: [
-        { id: 'usuarios-perfis', name: 'Usuários e Perfis', path: '/modulos/administracao?view=usuarios', category: 'CONTROLE', icon: 'Users' },
-        { id: 'parametros-sistema', name: 'Parâmetros do Sistema', path: '/modulos/administracao?view=parametros', category: 'CONTROLE', icon: 'Sliders' },
-        { id: 'entidades', name: 'Entidades', path: '/modulos/administracao?view=entidades', category: 'CONTROLE', icon: 'Building2' },
-        { id: 'auditoria-logs', name: 'Auditoria & Logs', path: '/modulos/administracao?view=audit', category: 'CONTROLE', icon: 'FileSearch' },
+        { id: 'usuarios-perfis', name: 'Usuários e Perfis', subtitle: 'Papéis (ADMIN/GESTOR/OPERADOR)', path: '/modulos/administracao?view=usuarios', category: 'CONTROLE', icon: 'Users' },
+        { id: 'parametros-sistema', name: 'Parâmetros do Sistema', subtitle: 'Limiares, ícones, camadas default', path: '/modulos/administracao?view=parametros', category: 'CONTROLE', icon: 'Sliders' },
+        { id: 'entidades', name: 'Entidades', subtitle: 'Municípios, unidades, equipes', path: '/modulos/administracao?view=entidades', category: 'CONTROLE', icon: 'Building2' },
+        { id: 'auditoria-logs', name: 'Auditoria & Logs', subtitle: 'Trilhas e compliance', path: '/modulos/administracao?view=audit', category: 'CONTROLE', icon: 'FileSearch' },
       ],
     },
 
@@ -187,39 +194,12 @@ export const NAVIGATION: NavigationMap = {
       icon: 'Gauge',
       badge: 'DEV',
       group: 'Serviços Técnicos',
+      roles: ['ADMIN'] as UserRole[],
       functions: [
-        { id: 'metricas', name: 'Métricas', path: '/modulos/observabilidade?view=metricas', category: 'CONTROLE', icon: 'Activity' },
-        { id: 'logs-sistema', name: 'Logs', path: '/modulos/observabilidade?view=logs', category: 'CONTROLE', icon: 'FileText' },
-        { id: 'saude-sistema', name: 'Saúde', path: '/modulos/observabilidade?view=health', category: 'CONTROLE', icon: 'HeartPulse' },
-        { id: 'qualidade-dados', name: 'Qualidade de Dados', path: '/modulos/observabilidade?view=dataQuality', category: 'CONTROLE', icon: 'ShieldCheck' },
-      ],
-    },
-
-    {
-      id: 'documentacao',
-      name: 'Documentação',
-      description: 'Guias, glossário técnico e API',
-      path: '/docs',
-      icon: 'BookOpen',
-      group: 'Serviços Técnicos',
-      functions: [
-        { id: 'guia-usuario', name: 'Guia do Usuário', path: '/docs?view=usuario', category: 'OPERACIONAL', icon: 'FileText' },
-        { id: 'glossario', name: 'Glossário Técnico', path: '/docs?view=glossario', category: 'CONTROLE', icon: 'BookMarked' },
-        { id: 'api', name: 'API Reference', path: '/docs?view=api', category: 'CONTROLE', icon: 'Code' },
-      ],
-    },
-
-    {
-      id: 'lgpd',
-      name: 'LGPD',
-      description: 'Privacidade, termos e base legal',
-      path: '/lgpd',
-      icon: 'ShieldCheck',
-      group: 'Serviços Técnicos',
-      functions: [
-        { id: 'politica-privacidade', name: 'Política de Privacidade', path: '/lgpd?view=privacidade', category: 'CONTROLE', icon: 'Shield' },
-        { id: 'termos-uso', name: 'Termos de Uso', path: '/lgpd?view=termos', category: 'CONTROLE', icon: 'FileText' },
-        { id: 'base-legal', name: 'Base Legal', path: '/lgpd?view=base-legal', category: 'CONTROLE', icon: 'Scale' },
+        { id: 'metricas', name: 'Métricas', subtitle: 'Prometheus/metrics de API e jobs', path: '/modulos/observabilidade?view=metricas', category: 'CONTROLE', icon: 'Activity' },
+        { id: 'logs-sistema', name: 'Logs', subtitle: 'Estruturados e correlação por request-id', path: '/modulos/observabilidade?view=logs', category: 'CONTROLE', icon: 'FileText' },
+        { id: 'saude-sistema', name: 'Saúde', subtitle: 'Health checks, filas e storage', path: '/modulos/observabilidade?view=health', category: 'CONTROLE', icon: 'HeartPulse' },
+        { id: 'qualidade-dados', name: 'Qualidade de Dados', subtitle: 'Checks recorrentes e painéis', path: '/modulos/observabilidade?view=dataQuality', category: 'CONTROLE', icon: 'ShieldCheck' },
       ],
     },
   ],

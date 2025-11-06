@@ -18,8 +18,8 @@ let stats = {
   errors: [],
 };
 
-// Parse de funções
-const functionMatches = content.matchAll(/\{\s*id:\s*['"]([^'"]+)['"],\s*name:\s*['"]([^'"]+)['"],\s*path:\s*['"]([^'"]+)['"],\s*category:\s*['"]([^'"]+)['"],\s*icon:\s*['"]([^'"]+)['"]/g);
+// Parse de funções (tolerante a propriedades extras e ordem)
+const functionMatches = content.matchAll(/\{[^}]*id:\s*['\"]([^'\"]+)['\"][^}]*name:\s*['\"]([^'\"]+)['\"][^}]*path:\s*['\"]([^'\"]+)['\"][^}]*category:\s*['\"]([^'\"]+)['\"][^}]*icon:\s*['\"]([^'\"]+)['\"]/g);
 
 for (const match of functionMatches) {
   const [, id, name, path, category, icon] = match;
@@ -131,6 +131,27 @@ if (missingCategories.length === 0) {
 } else {
   console.log(`  ❌ Categorias faltando: ${missingCategories.join(', ')}`);
   stats.errors.push(`Categorias faltando: ${missingCategories.join(', ')}`);
+}
+
+// Validar que nenhum módulo possui funções vazias
+const moduleBlocks = content.split(/\n\s*\},\s*\{/g); // aproximação para blocos
+let emptyFunctions = [];
+for (const block of moduleBlocks) {
+  const idMatch = block.match(/id:\s*['\"]([^'\"]+)['\"]/);
+  const hasFunctions = /functions:\s*\[([\s\S]*?)\]/.exec(block);
+  if (idMatch) {
+    const id = idMatch[1];
+    if (hasFunctions) {
+      const inner = hasFunctions[1].trim();
+      if (inner.length === 0) emptyFunctions.push(id);
+    }
+  }
+}
+if (emptyFunctions.length > 0) {
+  console.log(`\n  ❌ Módulos com funções vazias: ${emptyFunctions.join(', ')}`);
+  stats.errors.push(`Módulos com funções vazias: ${emptyFunctions.join(', ')}`);
+} else {
+  console.log('\n  ✅ Nenhum módulo com funções vazias');
 }
 
 console.log('\n═══════════════════════════════════════════════════════════');

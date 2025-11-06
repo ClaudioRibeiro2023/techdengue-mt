@@ -1,0 +1,124 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - link "🦟 TechDengue" [ref=e8] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e10]: 🦟
+          - heading "TechDengue" [level=1] [ref=e12]
+        - generic [ref=e13]:
+          - button "Abrir menu" [ref=e14] [cursor=pointer]:
+            - img [ref=e15]
+          - button "Abrir submenu" [ref=e19] [cursor=pointer]:
+            - img [ref=e20]
+          - button "Alternar tema" [ref=e23] [cursor=pointer]:
+            - img [ref=e24]
+          - link "Configurações" [ref=e26] [cursor=pointer]:
+            - /url: /profile
+            - img [ref=e27]
+          - link [ref=e30] [cursor=pointer]:
+            - /url: /denuncia
+            - img [ref=e31]
+          - button "U" [ref=e36] [cursor=pointer]:
+            - generic [ref=e37]: U
+            - img [ref=e38]
+          - button [ref=e40] [cursor=pointer]:
+            - img [ref=e41]
+      - navigation [ref=e46]:
+        - link "SIVEPI" [ref=e47] [cursor=pointer]:
+          - /url: /
+        - img [ref=e48]
+        - generic [ref=e50]: Dados
+        - img [ref=e51]
+        - generic [ref=e53]: Panorama Executivo
+  - generic [ref=e54]:
+    - complementary [ref=e55]:
+      - generic [ref=e56]:
+        - generic [ref=e57]:
+          - generic [ref=e58]:
+            - button "Recolher menu principal" [expanded] [ref=e59] [cursor=pointer]:
+              - img [ref=e60]
+            - generic [ref=e63]: SIVEPI
+          - generic [ref=e64]: Sistema Integrado de Vigilância
+        - textbox "Buscar aplicações..." [ref=e66]
+        - generic [ref=e67]:
+          - generic [ref=e68]: Web Mapas
+          - navigation [ref=e69]:
+            - link "Mapa Vivo" [ref=e70] [cursor=pointer]:
+              - /url: /mapa
+              - img [ref=e71]
+              - generic [ref=e75]: Mapa Vivo
+        - generic [ref=e76]:
+          - generic [ref=e77]: Dados
+          - navigation [ref=e78]:
+            - link "Panorama Executivo" [ref=e79] [cursor=pointer]:
+              - /url: /dashboard
+              - img [ref=e80]
+              - generic [ref=e85]: Panorama Executivo
+            - link "Relatórios & Indicadores" [ref=e86] [cursor=pointer]:
+              - /url: /relatorios
+              - img [ref=e87]
+              - generic [ref=e92]: Relatórios & Indicadores
+            - link "Previsão & Simulação IA" [ref=e93] [cursor=pointer]:
+              - /url: /modulos/previsao-simulacao
+              - img [ref=e94]
+              - generic [ref=e97]: Previsão & Simulação
+              - generic [ref=e98]: IA
+        - generic [ref=e99]:
+          - generic [ref=e100]: Vigilância
+          - navigation [ref=e101]:
+            - link "Vigilância Entomológica" [ref=e102] [cursor=pointer]:
+              - /url: /modulos/vigilancia-entomologica
+              - img [ref=e103]
+              - generic [ref=e115]: Vigilância Entomológica
+            - link "Vigilância Epidemiológica" [ref=e116] [cursor=pointer]:
+              - /url: /modulos/vigilancia-epidemiologica
+              - img [ref=e117]
+              - generic [ref=e119]: Vigilância Epidemiológica
+            - link "e‑Denúncia" [ref=e120] [cursor=pointer]:
+              - /url: /denuncia
+              - img [ref=e121]
+              - generic [ref=e124]: e‑Denúncia
+        - generic [ref=e125]:
+          - generic [ref=e126]: Operações
+          - navigation [ref=e127]:
+            - link "Resposta Operacional" [ref=e128] [cursor=pointer]:
+              - /url: /modulos/resposta-operacional
+              - img [ref=e129]
+              - generic [ref=e135]: Resposta Operacional
+        - generic [ref=e136]:
+          - generic [ref=e137]: Serviços Técnicos
+          - navigation [ref=e138]:
+            - link "ETL & Integração BETA" [ref=e139] [cursor=pointer]:
+              - /url: /etl
+              - img [ref=e140]
+              - generic [ref=e144]: ETL & Integração
+              - generic [ref=e145]: BETA
+            - link "Administração" [ref=e146] [cursor=pointer]:
+              - /url: /modulos/administracao
+              - img [ref=e147]
+              - generic [ref=e150]: Administração
+            - link "Observabilidade DEV" [ref=e151] [cursor=pointer]:
+              - /url: /modulos/observabilidade
+              - img [ref=e152]
+              - generic [ref=e155]: Observabilidade
+              - generic [ref=e156]: DEV
+        - generic [ref=e157]:
+          - generic [ref=e158]:
+            - generic [ref=e159]: TechDengue
+            - generic [ref=e160]: v0.1.0 · © 2025
+            - generic [ref=e161]: Todos os direitos reservados
+          - generic [ref=e162]:
+            - link "Documentação" [ref=e163] [cursor=pointer]:
+              - /url: /docs
+              - img [ref=e164]
+              - generic [ref=e167]: Documentação
+            - link "LGPD" [ref=e168] [cursor=pointer]:
+              - /url: /lgpd
+              - img [ref=e169]
+              - generic [ref=e172]: LGPD
+    - main [ref=e173]
+```

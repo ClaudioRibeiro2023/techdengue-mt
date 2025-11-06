@@ -2,6 +2,8 @@ import { ReactNode } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { UserRole } from '@/config/auth'
+import { logger } from '@/utils/logger'
+import { AccessDeniedBanner } from './AccessDeniedBanner'
 
 interface ProtectedRouteProps {
   children: ReactNode
@@ -16,6 +18,13 @@ export default function ProtectedRoute({
 }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading, hasRole, hasAnyRole } = useAuth()
   const location = useLocation()
+  const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true'
+  const MODE = import.meta.env.MODE
+
+  // E2E/DEMO bypass: do not require auth in e2e mode or demo mode
+  if (DEMO_MODE || MODE === 'e2e') {
+    return <>{children}</>
+  }
 
   if (isLoading) {
     return (
@@ -30,6 +39,10 @@ export default function ProtectedRoute({
 
   if (!isAuthenticated) {
     // Redirect to login page with return URL
+    logger.navigation('access-denied', location.pathname, {
+      reason: 'not authenticated',
+      redirectTo: '/login'
+    })
     return <Navigate to="/login" state={{ from: location }} replace />
   }
 
@@ -40,27 +53,20 @@ export default function ProtectedRoute({
       : hasAnyRole(requiredRoles)
 
     if (!hasRequiredAccess) {
+      logger.navigation('access-denied', location.pathname, {
+        reason: 'insufficient roles',
+        requiredRoles,
+        requireAllRoles
+      })
+      
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-          <div className="max-w-md w-full bg-white shadow-lg rounded-lg p-6">
-            <div className="text-center">
-              <div className="text-red-600 text-5xl mb-4">🚫</div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                Acesso Negado
-              </h1>
-              <p className="text-gray-600 mb-4">
-                Você não possui permissão para acessar esta página.
-              </p>
-              <p className="text-sm text-gray-500 mb-4">
-                Roles necessárias: {requiredRoles.join(', ')}
-              </p>
-              <button
-                onClick={() => window.history.back()}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-              >
-                Voltar
-              </button>
-            </div>
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+          <div className="max-w-2xl w-full">
+            <AccessDeniedBanner
+              requiredRoles={requiredRoles}
+              currentPath={location.pathname}
+              variant="error"
+            />
           </div>
         </div>
       )

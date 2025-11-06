@@ -14,10 +14,18 @@ export default function ProfilePage() {
     )
   }
 
-  const profile = user.profile
-  const userName = profile.name || (profile as any).preferred_username || 'Não informado'
+  type KeycloakProfile = {
+    name?: string
+    preferred_username?: string
+    email?: string
+    email_verified?: boolean
+    realm_access?: { roles?: string[] }
+    sub?: string
+  }
+  const profile = user.profile as KeycloakProfile
+  const userName = profile.name || profile.preferred_username || 'Não informado'
   const userEmail = profile.email || 'Não informado'
-  const userRoles = (profile as any).realm_access?.roles || []
+  const userRoles = profile.realm_access?.roles || []
   
   const tokenExpiry = user.expires_at
     ? format(new Date(user.expires_at * 1000), "PPpp", { locale: ptBR })
@@ -50,7 +58,7 @@ export default function ProfilePage() {
               <User className="w-5 h-5 text-gray-400 mt-0.5" />
               <div>
                 <div className="text-sm font-medium text-gray-500">Nome de Usuário</div>
-                <div className="text-gray-900">{(profile as any).preferred_username || 'Não informado'}</div>
+                <div className="text-gray-900">{profile.preferred_username || 'Não informado'}</div>
               </div>
             </div>
 

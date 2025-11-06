@@ -108,11 +108,18 @@ const ChatbotFSM: React.FC<ChatbotFSMProps> = ({ onComplete }) => {
   const [inicioTimestamp] = useState<number>(Date.now());
   const [isTyping, setIsTyping] = useState(false);
 
-  // Inicializar com primeira pergunta
+  // Inicializar com a pergunta do estado inicial apenas uma vez
   useEffect(() => {
-    const step = chatbotFlow[currentState];
+    const step = chatbotFlow['inicio'];
     if (step.pergunta) {
-      addBotMessage(step.pergunta);
+      setIsTyping(true);
+      setTimeout(() => {
+        setMessages((prev) => [
+          ...prev,
+          { tipo: 'bot', texto: step.pergunta as string, timestamp: new Date() }
+        ]);
+        setIsTyping(false);
+      }, 500);
     }
   }, []);
 

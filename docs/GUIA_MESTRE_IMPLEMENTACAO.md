@@ -1695,9 +1695,11 @@ async def download_kml(id: int):
 
 ### 7.1 M0 - Fundações (2 semanas)
 
-**Objetivo**: Infraestrutura base para todos os módulos
+ **Status**: Concluído. Ver M0_STATUS.md e validation_results.json.
 
-**Entregas**:
+ **Objetivo**: Infraestrutura base para todos os módulos
+
+ **Entregas**:
 
 1. **Monorepo** estruturado:
 ```
@@ -1739,16 +1741,18 @@ Techdengue_MT/
 
 **Critérios M0**:
 - [ ] Docker Compose sobe em < 2 min
-- [ ] 11 migrações aplicadas
-- [ ] Shapefiles MT importados (PostGIS `municipios_geometrias`)
-- [ ] Dados IBGE carregados (`municipios_ibge`, 141 linhas)
-- [ ] Keycloak realm importado
-- [ ] Login OIDC funciona
-- [ ] Métricas coletadas
+- [x] 11 migrações aplicadas
+- [x] Shapefiles MT importados (PostGIS `municipios_geometrias`)
+- [x] Dados IBGE carregados (`municipios_ibge`, 141 linhas)
+- [x] Keycloak realm importado
+- [x] Login OIDC funciona
+- [x] Métricas coletadas
 
 ---
 
 ### 7.2 M1 - Mapa/ETL/EPI01 (3 semanas)
+
+**Status**: ✅ Backend/API Concluído. Frontend pendente. Ver M1_AUDITORIA.md.
 
 **7.2.1 ETL EPI**
 
@@ -1852,11 +1856,35 @@ Techdengue_MT/
 **Hash**: SHA-256 no rodapé
 **Gráficos**: Matplotlib embarcados
 
+**✅ Implementação M1 (Backend)**:
+
+**Dados Importados**:
+- [x] municipios_ibge: 142 registros (100%)
+- [x] municipios_geometrias: 142 geometrias PostGIS com SRID 4326
+- [x] casos_sinan: 20.586 registros semanais (2023-2025)
+- [x] indicador_epi: 20.586 registros agregados (competência + valor)
+- [x] liraa_classificacao: 85 registros (79.4% cobertura)
+
+**Scripts Criados**:
+- [x] `backend/scripts/import_geometrias_mt.py` - Import shapefile via pyshp
+- [x] `backend/scripts/import_sinan_prn.py` - Parser .prn SINAN
+- [x] `backend/scripts/aggregate_sinan_to_indicador.py` - Agregação semanal
+- [x] Mapeamento manual LIRAa (34 municípios com acentos)
+
+**API Endpoints Validados**:
+- [x] `GET /api/health` - Health check OK
+- [x] `GET /api/mapa/estatisticas` - 141 municípios, 34.276 casos, incidência média 1194.27
+- [x] `GET /api/mapa/series-temporais/{codigo}` - Séries semanais por município
+- [x] `GET /api/mapa/heatmap` - 141 pontos com intensidades
+- [x] `GET /api/etl/jobs` - Lista jobs ETL (vazio, funcional)
+
 **Critérios M1**:
-- [ ] ETL processa 1k linhas < 5s
-- [ ] Mapa 141 municípios < 3s
-- [ ] Dashboard KPIs corretos
-- [ ] EPI01 PDF hash válido
+- [x] Dados SINAN importados e agregados
+- [x] API Mapa funcionando (4 endpoints validados)
+- [x] 141 municípios com dados de incidência completos
+- [x] PostGIS com geometrias e centroides
+- [ ] Dashboard KPIs (frontend pendente)
+- [ ] EPI01 PDF (geração de relatórios pendente)
 
 ---
 

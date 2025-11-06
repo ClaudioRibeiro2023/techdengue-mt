@@ -7,7 +7,8 @@ import { NAVIGATION } from '@/navigation/map'
 export default function HomePage() {
   const { user, hasRole } = useAuth()
 
-  const userName = user?.profile?.name || (user?.profile as any)?.preferred_username || 'Usuário'
+  const profile = user?.profile as { name?: string; preferred_username?: string } | undefined
+  const userName = profile?.name || profile?.preferred_username || 'Usuário'
 
   const iconByModule: Record<string, LucideIcon> = {
     'mapa-vivo': Map,

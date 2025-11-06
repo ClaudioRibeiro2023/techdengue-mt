@@ -89,7 +89,7 @@ class SyncService {
    */
   private async syncItem(item: SyncQueueItem): Promise<void> {
     const headers = await getAuthHeader();
-    const url = this.buildURL(item.entity, item.type, item.data);
+    const url = this.buildURL(item.entity, item.type, item.data as { id?: string } | undefined);
 
     switch (item.type) {
       case 'CREATE':
@@ -111,16 +111,16 @@ class SyncService {
   /**
    * Constrói URL para sync
    */
-  private buildURL(entity: string, type: string, data: any): string {
+  private buildURL(entity: string, type: 'CREATE' | 'UPDATE' | 'DELETE', data?: { id?: string }): string {
     switch (entity) {
       case 'atividade':
         return type === 'UPDATE' || type === 'DELETE'
-          ? `${API_BASE_URL}/campo/atividades/${data.id}`
+          ? `${API_BASE_URL}/campo/atividades/${data?.id}`
           : `${API_BASE_URL}/campo/atividades`;
 
       case 'evidencia':
         return type === 'UPDATE' || type === 'DELETE'
-          ? `${API_BASE_URL}/campo/evidencias/${data.id}`
+          ? `${API_BASE_URL}/campo/evidencias/${data?.id}`
           : `${API_BASE_URL}/campo/evidencias`;
 
       default:
@@ -135,9 +135,10 @@ class SyncService {
     if ('serviceWorker' in navigator && 'SyncManager' in window) {
       try {
         const registration = await navigator.serviceWorker.ready;
-        // Type guard for sync property
-        if ('sync' in registration) {
-          await (registration as any).sync.register('sync-queue');
+        type SyncCapable = ServiceWorkerRegistration & { sync?: { register: (name: string) => Promise<void> } }
+        const reg = registration as SyncCapable
+        if (reg.sync) {
+          await reg.sync.register('sync-queue');
           console.log('Background sync registered');
         }
       } catch (error) {

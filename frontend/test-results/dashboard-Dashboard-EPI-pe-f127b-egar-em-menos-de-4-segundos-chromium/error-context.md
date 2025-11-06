@@ -1,0 +1,170 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - link "🦟 TechDengue Vigilância em Saúde" [ref=e8] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e10]: 🦟
+          - generic [ref=e11]:
+            - heading "TechDengue" [level=1] [ref=e12]
+            - paragraph [ref=e13]: Vigilância em Saúde
+        - generic [ref=e14]:
+          - button "Recolher menu principal" [ref=e15] [cursor=pointer]:
+            - img [ref=e16]
+          - button "Recolher painel de funções" [ref=e19] [cursor=pointer]:
+            - img [ref=e20]
+          - button "Alternar tema" [ref=e23] [cursor=pointer]:
+            - img [ref=e24]
+          - link "Configurações" [ref=e26] [cursor=pointer]:
+            - /url: /profile
+            - img [ref=e27]
+          - link "Denunciar" [ref=e30] [cursor=pointer]:
+            - /url: /denuncia
+            - img [ref=e31]
+            - generic [ref=e33]: Denunciar
+          - button "U Usuário" [ref=e35] [cursor=pointer]:
+            - generic [ref=e36]: U
+            - generic [ref=e38]: Usuário
+            - img [ref=e39]
+      - navigation [ref=e42]:
+        - link "SIVEPI" [ref=e43] [cursor=pointer]:
+          - /url: /
+        - img [ref=e44]
+        - generic [ref=e46]: Dados
+        - img [ref=e47]
+        - generic [ref=e49]: Panorama Executivo
+  - generic [ref=e50]:
+    - complementary [ref=e51]:
+      - generic [ref=e52]:
+        - generic [ref=e53]:
+          - generic [ref=e54]:
+            - button "Recolher menu principal" [expanded] [ref=e55] [cursor=pointer]:
+              - img [ref=e56]
+            - generic [ref=e59]: SIVEPI
+          - generic [ref=e60]: Sistema Integrado de Vigilância
+        - textbox "Buscar aplicações..." [ref=e62]
+        - generic [ref=e63]:
+          - generic [ref=e64]: Web Mapas
+          - navigation [ref=e65]:
+            - link "Mapa Vivo" [ref=e66] [cursor=pointer]:
+              - /url: /mapa
+              - img [ref=e67]
+              - generic [ref=e69]: Mapa Vivo
+        - generic [ref=e70]:
+          - generic [ref=e71]: Dados
+          - navigation [ref=e72]:
+            - link "Panorama Executivo" [ref=e73] [cursor=pointer]:
+              - /url: /dashboard
+              - img [ref=e74]
+              - generic [ref=e79]: Panorama Executivo
+            - link "Relatórios & Indicadores" [ref=e80] [cursor=pointer]:
+              - /url: /relatorios
+              - img [ref=e81]
+              - generic [ref=e83]: Relatórios & Indicadores
+            - link "Previsão & Simulação IA" [ref=e84] [cursor=pointer]:
+              - /url: /modulos/previsao-simulacao
+              - img [ref=e85]
+              - generic [ref=e88]: Previsão & Simulação
+              - generic [ref=e89]: IA
+        - generic [ref=e90]:
+          - generic [ref=e91]: Vigilância
+          - navigation [ref=e92]:
+            - link "Vigilância Entomológica" [ref=e93] [cursor=pointer]:
+              - /url: /modulos/vigilancia-entomologica
+              - img [ref=e94]
+              - generic [ref=e103]: Vigilância Entomológica
+            - link "Vigilância Epidemiológica" [ref=e104] [cursor=pointer]:
+              - /url: /modulos/vigilancia-epidemiologica
+              - img [ref=e105]
+              - generic [ref=e107]: Vigilância Epidemiológica
+            - link "e‑Denúncia" [ref=e108] [cursor=pointer]:
+              - /url: /denuncia
+              - img [ref=e109]
+              - generic [ref=e112]: e‑Denúncia
+        - generic [ref=e113]:
+          - generic [ref=e114]: Operações
+          - navigation [ref=e115]:
+            - link "Resposta Operacional" [ref=e116] [cursor=pointer]:
+              - /url: /modulos/resposta-operacional
+              - img [ref=e117]
+              - generic [ref=e122]: Resposta Operacional
+        - generic [ref=e123]:
+          - generic [ref=e124]: Serviços Técnicos
+          - navigation [ref=e125]:
+            - link "ETL & Integração BETA" [ref=e126] [cursor=pointer]:
+              - /url: /etl
+              - img [ref=e127]
+              - generic [ref=e131]: ETL & Integração
+              - generic [ref=e132]: BETA
+            - link "Administração" [ref=e133] [cursor=pointer]:
+              - /url: /modulos/administracao
+              - img [ref=e134]
+              - generic [ref=e137]: Administração
+            - link "Observabilidade DEV" [ref=e138] [cursor=pointer]:
+              - /url: /modulos/observabilidade
+              - img [ref=e139]
+              - generic [ref=e142]: Observabilidade
+              - generic [ref=e143]: DEV
+        - generic [ref=e144]:
+          - generic [ref=e145]:
+            - generic [ref=e146]: TechDengue
+            - generic [ref=e147]: v0.1.0 · © 2025
+            - generic [ref=e148]: Todos os direitos reservados
+          - generic [ref=e149]:
+            - link "Documentação" [ref=e150] [cursor=pointer]:
+              - /url: /docs
+              - img [ref=e151]
+              - generic [ref=e154]: Documentação
+            - link "LGPD" [ref=e155] [cursor=pointer]:
+              - /url: /lgpd
+              - img [ref=e156]
+              - generic [ref=e159]: LGPD
+    - complementary [ref=e160]:
+      - generic [ref=e161]:
+        - generic [ref=e162]:
+          - button "Recolher submenu" [expanded] [ref=e163] [cursor=pointer]:
+            - img [ref=e164]
+          - generic [ref=e167]:
+            - generic [ref=e168]: Módulos
+            - generic [ref=e169]: Panorama Executivo
+        - generic [ref=e170]: Dashboard consolidado e KPIs estratégicos
+      - generic [ref=e171]:
+        - generic [ref=e172]:
+          - generic [ref=e173]: Indicadores
+          - navigation [ref=e174]:
+            - link "Dashboard Consolidado KPIs e visão geral Indicadores" [ref=e175] [cursor=pointer]:
+              - /url: /dashboard
+              - img [ref=e176]
+              - generic [ref=e181]:
+                - generic [ref=e182]: Dashboard Consolidado
+                - generic [ref=e183]: KPIs e visão geral
+              - generic [ref=e184]: Indicadores
+            - link "Rankings Metas e semáforos Indicadores" [ref=e185] [cursor=pointer]:
+              - /url: /dashboard?view=rankings
+              - img [ref=e186]
+              - generic [ref=e189]:
+                - generic [ref=e190]: Rankings
+                - generic [ref=e191]: Metas e semáforos
+              - generic [ref=e192]: Indicadores
+            - link "Relatórios Rápidos Snapshots e exportes Indicadores" [ref=e193] [cursor=pointer]:
+              - /url: /dashboard?view=reports
+              - img [ref=e194]
+              - generic [ref=e197]:
+                - generic [ref=e198]: Relatórios Rápidos
+                - generic [ref=e199]: Snapshots e exportes
+              - generic [ref=e200]: Indicadores
+        - generic [ref=e201]:
+          - generic [ref=e202]: Controle
+          - navigation [ref=e203]:
+            - link "Alertas Notificações e watchlist Controle" [ref=e204] [cursor=pointer]:
+              - /url: /dashboard?view=alerts
+              - img [ref=e205]
+              - generic [ref=e208]:
+                - generic [ref=e209]: Alertas
+                - generic [ref=e210]: Notificações e watchlist
+              - generic [ref=e211]: Controle
+    - main [ref=e212]
+```

@@ -162,13 +162,13 @@ class KeycloakSeeder:
             "serviceAccountsEnabled": True,
             "authorizationServicesEnabled": True,
             "redirectUris": [
-                "http://localhost:3000/*",
+                "http://localhost:6080/*",
                 "http://localhost:8000/*",
                 "http://localhost:8001/*",
                 "http://localhost:8002/*"
             ],
             "webOrigins": [
-                "http://localhost:3000",
+                "http://localhost:6080",
                 "http://localhost:8000",
                 "http://localhost:8001",
                 "http://localhost:8002"

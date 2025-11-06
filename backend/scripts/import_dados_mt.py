@@ -20,6 +20,8 @@ import sys
 import os
 from typing import List, Dict, Tuple
 from fuzzywuzzy import fuzz
+import re
+from html import unescape
 
 # =========================================================================
 # Configuração
@@ -29,12 +31,50 @@ DB_CONFIG = {
     'host': os.getenv('POSTGRES_HOST', 'localhost'),
     'port': int(os.getenv('POSTGRES_PORT', 5432)),
     'database': os.getenv('POSTGRES_DB', 'techdengue'),
-    'user': os.getenv('POSTGRES_USER', 'postgres'),
-    'password': os.getenv('POSTGRES_PASSWORD', 'postgres')
+    'user': os.getenv('POSTGRES_USER', 'techdengue'),
+    'password': os.getenv('POSTGRES_PASSWORD', 'techdengue')
 }
 
 BASE_DIR = Path(__file__).parent.parent.parent
 DADOS_DIR = BASE_DIR / 'dados-mt'
+
+# Mapeamento manual LIRAa → IBGE (para casos com acentos/caracteres especiais)
+LIRAA_MANUAL_MAPPING = {
+    'Água Boa': 'Agua Boa',
+    'Alto Garças': 'Alto Garcas',
+    'Apiacás': 'Apiacas',
+    'Arenápolis': 'Arenapolis',
+    'Aripuanã': 'Aripuana',
+    'Barão de Melgaço': 'Barao de Melgaco',
+    'Cáceres': 'Caceres',
+    'Campinápolis': 'Campinapolis',
+    'Cláudia': 'Claudia',
+    'Colíder': 'Colider',
+    'Cotriguaçu': 'Cotriguacu',
+    'Curvelândia': 'Curvelandia',
+    'Itanhangá': 'Itanhanga',
+    'Itaúba': 'Itauba',
+    'Juína': 'Juina',
+    'Marcelândia': 'Marcelandia',
+    'Matupá': 'Matupa',
+    'Nortelândia': 'Nortelandia',
+    'Nova Canaã do Norte': 'Nova Canaa do Norte',
+    'Nova Maringá': 'Nova Maringa',
+    'Nova Olímpia': 'Nova Olimpia',
+    'Nova Ubiratã': 'Nova Ubirata',
+    'Poconé': 'Pocone',
+    'Porto dos Gaúchos': 'Porto dos Gauchos',
+    'Querência': 'Querencia',
+    'Ribeirãozinho': 'Ribeiraozinho',
+    'Rondonópolis': 'Rondonopolis',
+    'Rosário Oeste': 'Rosario Oeste',
+    'São José do Povo': 'Sao Jose do Povo',
+    'São José do Rio Claro': 'Sao Jose do Rio Claro',
+    'São José do Xingu': 'Sao Jose do Xingu',
+    'Torixoréu': 'Torixoreu',
+    'União do Sul': 'Uniao do Sul',
+    'Várzea Grande': 'Varzea Grande'
+}
 
 # =========================================================================
 # Utilitários
@@ -45,15 +85,17 @@ def get_db_connection():
     return psycopg2.connect(**DB_CONFIG)
 
 def limpar_texto(texto: str) -> str:
-    """Normalizar texto (remover acentos, lowercase)"""
     import unicodedata
     if not texto:
         return ""
     texto = str(texto)
     texto = unicodedata.normalize('NFKD', texto).encode('ASCII', 'ignore').decode('ASCII')
-    return texto.lower().strip()
+    texto = texto.lower()
+    texto = re.sub(r"[^a-z0-9]+", " ", texto)
+    texto = re.sub(r"\s+", " ", texto).strip()
+    return texto
 
-def fuzzy_match_municipio(nome_original: str, municipios_ref: List[Dict], threshold: int = 85) -> Tuple[str, int]:
+def fuzzy_match_municipio(nome_original: str, municipios_ref: List[Dict], threshold: int = 60) -> Tuple[str, int]:
     """
     Fuzzy match de nome de município
     
@@ -65,14 +107,16 @@ def fuzzy_match_municipio(nome_original: str, municipios_ref: List[Dict], thresh
     Returns:
         (codigo_ibge, score) ou (None, 0) se não encontrar
     """
-    nome_normalizado = limpar_texto(nome_original)
+    # Tentar mapeamento manual primeiro
+    nome_mapeado = LIRAA_MANUAL_MAPPING.get(nome_original, nome_original)
+    nome_normalizado = limpar_texto(nome_mapeado)
     
     best_match = None
     best_score = 0
     
     for mun in municipios_ref:
         nome_ref = limpar_texto(mun['nome'])
-        score = fuzz.ratio(nome_normalizado, nome_ref)
+        score = fuzz.token_set_ratio(nome_normalizado, nome_ref)
         
         if score > best_score:
             best_score = score
@@ -101,9 +145,17 @@ def import_ibge_data(conn):
     
     # Ler CSV (primeira linha é header descritivo, segunda é header real)
     df = pd.read_csv(csv_path, skiprows=1, encoding='utf-8')
-    
-    # Renomear colunas para match com tabela
-    df.columns = [col.split('[')[0].strip() for col in df.columns]
+
+    # Renomear colunas: unescape HTML entities, remover tags e sufixos entre colchetes
+    normalized_cols = []
+    for col in df.columns:
+      c = unescape(str(col))
+      c = re.sub(r"<[^>]+>", "", c)  # remover tags HTML
+      c = c.split("[")[0].strip()     # remover sufixo entre colchetes
+      c = re.sub(r"\s*-\s*$", "", c)  # remover hífen terminal e espaços
+      c = re.sub(r"\s+", " ", c)   # normalizar espaços
+      normalized_cols.append(c)
+    df.columns = normalized_cols
     
     print(f"  📁 Arquivo: {csv_path.name}")
     print(f"  📋 Linhas: {len(df)}")
@@ -275,10 +327,13 @@ def import_liraa(conn):
     print("🦟 IMPORTANDO CLASSIFICAÇÃO LIRAa")
     print("="*70)
     
-    csv_path = DADOS_DIR / 'LIRAa_MT_2025_-_Ciclo_Janeiro__classificacao_.csv'
-    
-    if not csv_path.exists():
-        print(f"❌ Arquivo não encontrado: {csv_path}")
+    csv_candidates = [
+        DADOS_DIR / 'LIRAa_MT_2025_-_Ciclo_Janeiro__classificacao_.csv',
+        DADOS_DIR / 'LIRAa_MT_2025_-_Ciclo_Janeiro__classifica__o_.csv',
+    ]
+    csv_path = next((p for p in csv_candidates if p.exists()), None)
+    if not csv_path:
+        print(f"❌ Arquivo não encontrado: {csv_candidates[0]} ou {csv_candidates[1]}")
         return False
     
     # Ler CSV
@@ -309,8 +364,8 @@ def import_liraa(conn):
         if not nome_original or not classificacao:
             continue
         
-        # Fuzzy match
-        codigo_ibge, score = fuzzy_match_municipio(nome_original, municipios_ref, threshold=85)
+        # Fuzzy match (com mapeamento manual para acentos)
+        codigo_ibge, score = fuzzy_match_municipio(nome_original, municipios_ref, threshold=65)
         
         if codigo_ibge:
             matches_ok += 1

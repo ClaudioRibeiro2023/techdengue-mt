@@ -22,8 +22,8 @@ export default function ConsultarDenunciaPage() {
         }
         const json = await res.json()
         if (mounted) setData(json)
-      } catch (e: any) {
-        if (mounted) setError(e?.message || 'Erro ao consultar')
+      } catch (e: unknown) {
+        if (mounted) setError(e instanceof Error ? e.message : 'Erro ao consultar')
       } finally {
         if (mounted) setLoading(false)
       }

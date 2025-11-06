@@ -1,0 +1,171 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - link "🦟 TechDengue Vigilância em Saúde" [ref=e8] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e10]: 🦟
+          - generic [ref=e11]:
+            - heading "TechDengue" [level=1] [ref=e12]
+            - paragraph [ref=e13]: Vigilância em Saúde
+        - generic [ref=e14]:
+          - button "Recolher menu principal" [ref=e15] [cursor=pointer]:
+            - img [ref=e16]
+          - button "Recolher painel de funções" [ref=e19] [cursor=pointer]:
+            - img [ref=e20]
+          - button "Alternar tema" [ref=e23] [cursor=pointer]:
+            - img [ref=e24]
+          - link "Configurações" [ref=e26] [cursor=pointer]:
+            - /url: /profile
+            - img [ref=e27]
+          - link "Denunciar" [ref=e30] [cursor=pointer]:
+            - /url: /denuncia
+            - img [ref=e31]
+            - generic [ref=e35]: Denunciar
+          - button "U Usuário" [ref=e37] [cursor=pointer]:
+            - generic [ref=e38]: U
+            - generic [ref=e40]: Usuário
+            - img [ref=e41]
+      - navigation [ref=e44]:
+        - link "SIVEPI" [ref=e45] [cursor=pointer]:
+          - /url: /
+        - img [ref=e46]
+        - generic [ref=e48]: Início
+  - generic [ref=e49]:
+    - complementary [ref=e50]:
+      - generic [ref=e51]:
+        - generic [ref=e52]:
+          - generic [ref=e53]:
+            - button "Recolher menu principal" [expanded] [ref=e54] [cursor=pointer]:
+              - img [ref=e55]
+            - generic [ref=e58]: SIVEPI
+          - generic [ref=e59]: Sistema Integrado de Vigilância
+        - textbox "Buscar aplicações..." [ref=e61]
+        - generic [ref=e62]:
+          - generic [ref=e63]: Web Mapas
+          - navigation [ref=e64]:
+            - link "Mapa Vivo" [ref=e65] [cursor=pointer]:
+              - /url: /mapa
+              - img [ref=e66]
+              - generic [ref=e70]: Mapa Vivo
+        - generic [ref=e71]:
+          - generic [ref=e72]: Dados
+          - navigation [ref=e73]:
+            - link "Panorama Executivo" [ref=e74] [cursor=pointer]:
+              - /url: /dashboard
+              - img [ref=e75]
+              - generic [ref=e80]: Panorama Executivo
+            - link "Relatórios & Indicadores" [ref=e81] [cursor=pointer]:
+              - /url: /relatorios
+              - img [ref=e82]
+              - generic [ref=e87]: Relatórios & Indicadores
+            - link "Previsão & Simulação IA" [ref=e88] [cursor=pointer]:
+              - /url: /modulos/previsao-simulacao
+              - img [ref=e89]
+              - generic [ref=e92]: Previsão & Simulação
+              - generic [ref=e93]: IA
+        - generic [ref=e94]:
+          - generic [ref=e95]: Vigilância
+          - navigation [ref=e96]:
+            - link "Vigilância Entomológica" [ref=e97] [cursor=pointer]:
+              - /url: /modulos/vigilancia-entomologica
+              - img [ref=e98]
+              - generic [ref=e110]: Vigilância Entomológica
+            - link "Vigilância Epidemiológica" [ref=e111] [cursor=pointer]:
+              - /url: /modulos/vigilancia-epidemiologica
+              - img [ref=e112]
+              - generic [ref=e114]: Vigilância Epidemiológica
+            - link "e‑Denúncia" [ref=e115] [cursor=pointer]:
+              - /url: /denuncia
+              - img [ref=e116]
+              - generic [ref=e119]: e‑Denúncia
+        - generic [ref=e120]:
+          - generic [ref=e121]: Operações
+          - navigation [ref=e122]:
+            - link "Resposta Operacional" [ref=e123] [cursor=pointer]:
+              - /url: /modulos/resposta-operacional
+              - img [ref=e124]
+              - generic [ref=e130]: Resposta Operacional
+        - generic [ref=e131]:
+          - generic [ref=e132]: Serviços Técnicos
+          - navigation [ref=e133]:
+            - link "ETL & Integração BETA" [ref=e134] [cursor=pointer]:
+              - /url: /etl
+              - img [ref=e135]
+              - generic [ref=e139]: ETL & Integração
+              - generic [ref=e140]: BETA
+            - link "Administração" [ref=e141] [cursor=pointer]:
+              - /url: /modulos/administracao
+              - img [ref=e142]
+              - generic [ref=e145]: Administração
+            - link "Observabilidade DEV" [ref=e146] [cursor=pointer]:
+              - /url: /modulos/observabilidade
+              - img [ref=e147]
+              - generic [ref=e150]: Observabilidade
+              - generic [ref=e151]: DEV
+        - generic [ref=e152]:
+          - generic [ref=e153]:
+            - generic [ref=e154]: TechDengue
+            - generic [ref=e155]: v0.1.0 · © 2025
+            - generic [ref=e156]: Todos os direitos reservados
+          - generic [ref=e157]:
+            - link "Documentação" [ref=e158] [cursor=pointer]:
+              - /url: /docs
+              - img [ref=e159]
+              - generic [ref=e162]: Documentação
+            - link "LGPD" [ref=e163] [cursor=pointer]:
+              - /url: /lgpd
+              - img [ref=e164]
+              - generic [ref=e167]: LGPD
+    - main [ref=e168]:
+      - generic [ref=e170]:
+        - generic [ref=e171]:
+          - heading "Bem-vindo, Usuário!" [level=1] [ref=e172]
+          - paragraph [ref=e173]: Sistema de Monitoramento e Controle do Aedes aegypti
+        - generic [ref=e174]:
+          - generic [ref=e175]:
+            - generic [ref=e176]:
+              - img [ref=e177]
+              - generic [ref=e180]: +12%
+            - generic [ref=e181]: 1,234
+            - generic [ref=e182]: Casos Notificados
+          - generic [ref=e183]:
+            - generic [ref=e184]:
+              - img [ref=e185]
+              - generic [ref=e190]: +8%
+            - generic [ref=e191]: "567"
+            - generic [ref=e192]: Atividades de Campo
+          - generic [ref=e193]:
+            - generic [ref=e194]:
+              - img [ref=e195]
+              - generic [ref=e199]: "-5%"
+            - generic [ref=e200]: "23"
+            - generic [ref=e201]: Alertas Ativos
+        - generic [ref=e202]:
+          - heading "Módulos do Sistema" [level=2] [ref=e203]
+          - generic [ref=e204]:
+            - link "Mapa Vivo WebMapa Unificado - Navegação e análises espaciais" [ref=e205] [cursor=pointer]:
+              - /url: /mapa
+              - img [ref=e207]
+              - heading "Mapa Vivo" [level=3] [ref=e211]
+              - paragraph [ref=e212]: WebMapa Unificado - Navegação e análises espaciais
+            - link "Panorama Executivo Dashboard consolidado e KPIs estratégicos" [ref=e213] [cursor=pointer]:
+              - /url: /dashboard
+              - img [ref=e215]
+              - heading "Panorama Executivo" [level=3] [ref=e220]
+              - paragraph [ref=e221]: Dashboard consolidado e KPIs estratégicos
+            - link "Relatórios & Indicadores Relatórios EPI e exportações" [ref=e222] [cursor=pointer]:
+              - /url: /relatorios
+              - img [ref=e224]
+              - heading "Relatórios & Indicadores" [level=3] [ref=e230]
+              - paragraph [ref=e231]: Relatórios EPI e exportações
+            - link "ETL & Integração Importadores e tratamento de dados ADMIN" [ref=e232] [cursor=pointer]:
+              - /url: /etl
+              - img [ref=e234]
+              - heading "ETL & Integração" [level=3] [ref=e238]
+              - paragraph [ref=e239]: Importadores e tratamento de dados
+              - generic [ref=e240]: ADMIN
+```

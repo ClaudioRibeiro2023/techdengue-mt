@@ -3,21 +3,31 @@ import { useEffect, useMemo, useState } from 'react'
 import { NAVIGATION } from '@/navigation/map'
 import Icon from '@/components/ui/Icon'
 import pkg from '../../../package.json'
+import { useAuth } from '@/contexts/AuthContext'
 
 const GROUP_ORDER = ['Web Mapas', 'Dados', 'Vigilância', 'Operações', 'Serviços Técnicos', 'Sistema', 'Outros']
 
 export default function AppSidebar() {
   const { pathname } = useLocation()
   const [query, setQuery] = useState('')
+  const { hasAnyRole } = useAuth()
+  const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true'
 
-  const items = useMemo(() => NAVIGATION.modules.map(m => ({
-    id: m.id,
-    name: m.name,
-    path: m.path,
-    icon: m.icon,
-    badge: m.badge,
-    group: m.group || 'Outros',
-  })), [])
+  const items = useMemo(() => NAVIGATION.modules
+    .filter(m => {
+      if (!DEMO_MODE && m.roles && !hasAnyRole(m.roles)) return false
+      const fns = m.functions || []
+      const hasVisibleFn = fns.length === 0 || fns.some(fn => DEMO_MODE || !fn.roles || hasAnyRole(fn.roles))
+      return hasVisibleFn
+    })
+    .map(m => ({
+      id: m.id,
+      name: m.name,
+      path: m.path,
+      icon: m.icon,
+      badge: m.badge,
+      group: m.group || 'Outros',
+    })), [hasAnyRole, DEMO_MODE])
 
   const isActive = (path: string) => pathname === path || pathname.startsWith(path + '/')
 
@@ -111,6 +121,7 @@ export default function AppSidebar() {
               onClick={(e) => {
                 const next = document.documentElement.classList.toggle('sidebar-collapsed')
                 e.currentTarget.setAttribute('aria-expanded', (!next).toString())
+                localStorage.setItem('sidebar-collapsed', next ? '1' : '0')
               }}
             >
               <Icon name="ChevronsLeft" size={16} className="icon-left" />
@@ -139,6 +150,7 @@ export default function AppSidebar() {
                   key={it.id}
                   to={it.path}
                   className={isActive(it.path) ? 'active' : ''}
+                  aria-current={isActive(it.path) ? 'page' : undefined}
                   title={it.name}
                 >
                   {it.icon && <Icon name={it.icon} size={16} />}

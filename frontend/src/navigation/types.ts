@@ -1,3 +1,5 @@
+import type { UserRole } from '@/config/auth'
+
 export type NavCategory = 'ANALISE' | 'MAPEAMENTO' | 'INDICADORES' | 'CONTROLE' | 'OPERACIONAL'
 
 export type FunctionItem = {
@@ -7,6 +9,7 @@ export type FunctionItem = {
   category?: NavCategory
   icon?: string
   subtitle?: string
+  roles?: UserRole[]
 }
 
 export type AppModule = {
@@ -19,6 +22,7 @@ export type AppModule = {
   badge?: string
   group?: string
   functions?: FunctionItem[]
+  roles?: UserRole[]
 }
 
 export type NavigationMap = {

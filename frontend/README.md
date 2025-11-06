@@ -136,7 +136,7 @@ Copie `.env.example` para `.env` e ajuste:
 
 ```bash
 # App
-VITE_APP_URL=http://localhost:3000
+VITE_APP_URL=http://localhost:6080
 
 # API URLs
 VITE_API_URL=http://localhost:8000/api
@@ -188,7 +188,7 @@ npm install
 npm run dev
 ```
 
-Abre em http://localhost:3000
+Abre em http://localhost:6080
 
 ### Build
 
@@ -275,7 +275,7 @@ npm run dev
 
 ### 3. Testar Login
 
-1. Acesse http://localhost:3000
+1. Acesse http://localhost:6080
 2. Você será redirecionado para `/login`
 3. Clique em "Entrar com Keycloak"
 4. Faça login no Keycloak:
@@ -303,12 +303,12 @@ npm run dev
 ## Troubleshooting
 
 ### "Redirect URI mismatch"
-- Verifique se `http://localhost:3000/auth/callback` está configurado no Keycloak
+- Verifique se `http://localhost:6080/auth/callback` está configurado no Keycloak
 - Client → techdengue-api → Valid Redirect URIs
 
 ### "CORS error"
 - Verifique Web Origins no Keycloak client
-- Adicione `http://localhost:3000`
+- Adicione `http://localhost:6080`
 
 ### "Token expired"
 - O sistema tenta renovar automaticamente

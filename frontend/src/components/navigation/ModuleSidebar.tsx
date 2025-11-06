@@ -1,8 +1,9 @@
 import { Link, useLocation } from 'react-router-dom'
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { NAVIGATION } from '@/navigation/map'
 import type { AppModule, FunctionItem, NavCategory } from '@/navigation/types'
 import Icon from '@/components/ui/Icon'
+import { useAuth } from '@/contexts/AuthContext'
 
 function resolveActiveModule(pathname: string): AppModule | undefined {
   // Map pages to module IDs
@@ -49,9 +50,15 @@ function groupByCategory(items: FunctionItem[]) {
 export default function ModuleSidebar() {
   const location = useLocation()
   const { pathname, search } = location
+  const { hasAnyRole } = useAuth()
+  const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true'
 
   const module = useMemo(() => resolveActiveModule(pathname), [pathname])
-  const groups = useMemo(() => groupByCategory(module?.functions || []), [module])
+  const visibleFunctions = useMemo(() => {
+    const list = module?.functions || []
+    return list.filter(fn => DEMO_MODE || !fn.roles || hasAnyRole(fn.roles))
+  }, [module, hasAnyRole, DEMO_MODE])
+  const groups = useMemo(() => groupByCategory(visibleFunctions), [visibleFunctions])
 
   const isActive = (path: string) => {
     if (path.includes(':')) return false
@@ -67,7 +74,62 @@ export default function ModuleSidebar() {
     return true
   }
 
+  useEffect(() => {
+    const root = document.documentElement
+    const body = document.body
+    const subnav = document.getElementById('app-submenu')
+
+    const getFocusable = () => Array.from((subnav?.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    )) || [])
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (!root.classList.contains('mobile-submenu-open')) return
+      if (e.key === 'Escape') {
+        root.classList.remove('mobile-submenu-open')
+        e.preventDefault()
+        return
+      }
+      if (e.key !== 'Tab') return
+      const focusable = getFocusable()
+      if (!focusable.length) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      const active = document.activeElement as HTMLElement | null
+      if (e.shiftKey) {
+        if (!active || active === first) {
+          last.focus(); e.preventDefault()
+        }
+      } else {
+        if (!active || active === last) {
+          first.focus(); e.preventDefault()
+        }
+      }
+    }
+
+    const observer = new MutationObserver(() => {
+      const open = root.classList.contains('mobile-submenu-open')
+      if (open) {
+        body.style.overflow = 'hidden'
+        const focusable = getFocusable()
+        if (focusable.length) focusable[0].focus()
+        document.addEventListener('keydown', onKeyDown)
+      } else {
+        body.style.overflow = ''
+        document.removeEventListener('keydown', onKeyDown)
+      }
+    })
+
+    observer.observe(root, { attributes: true, attributeFilter: ['class'] })
+    return () => {
+      observer.disconnect()
+      document.removeEventListener('keydown', onKeyDown)
+      body.style.overflow = ''
+    }
+  }, [])
+
   if (!module) return null
+  if (!DEMO_MODE && module.roles && !hasAnyRole(module.roles)) return null
 
   return (
     <aside id="app-submenu" data-app-nav="secondary" className="hidden lg:block">
@@ -81,6 +143,7 @@ export default function ModuleSidebar() {
             onClick={(e) => {
               const next = document.documentElement.classList.toggle('subnav-collapsed')
               e.currentTarget.setAttribute('aria-expanded', (!next).toString())
+              localStorage.setItem('subnav-collapsed', next ? '1' : '0')
             }}
           >
             <Icon name="ChevronsLeft" size={16} className="icon-left" />
@@ -106,6 +169,7 @@ export default function ModuleSidebar() {
                   key={it.id}
                   to={it.path.includes(':') ? '#' : it.path}
                   className={isActive(it.path) ? 'active' : ''}
+                  aria-current={isActive(it.path) ? 'page' : undefined}
                   title={it.name}
                   onClick={e => it.path.includes(':') && e.preventDefault()}
                 >

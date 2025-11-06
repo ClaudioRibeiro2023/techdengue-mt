@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { User, UserManager } from 'oidc-client-ts'
 import { oidcConfig, UserRole } from '@/config/auth'
+import { logger } from '@/utils/logger'
 
 interface AuthContextType {
   user: User | null
@@ -24,46 +25,45 @@ const getUserManager = (): UserManager => {
   return userManager
 }
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+function RealAuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const manager = getUserManager()
 
-    // Load user from storage on mount
     manager.getUser().then((loadedUser) => {
       setUser(loadedUser)
       setIsLoading(false)
+      if (loadedUser) {
+        const profile = loadedUser.profile as { email?: string; preferred_username?: string }
+        logger.auth('login', {
+          userId: profile.email || profile.preferred_username,
+          sessionStart: new Date(loadedUser.profile.iat! * 1000).toISOString()
+        })
+      }
     }).catch((error: unknown) => {
-      console.error('Failed to load user:', error)
+      logger.error('Failed to load user', {}, error as Error)
       setIsLoading(false)
     })
 
-    // Listen for user loaded event
     const handleUserLoaded = (loadedUser: User) => {
       setUser(loadedUser)
+      logger.auth('token-renewed', { timestamp: new Date().toISOString() })
     }
-
-    // Listen for user unloaded event
     const handleUserUnloaded = () => {
       setUser(null)
+      logger.auth('logout')
     }
-
-    // Listen for access token expiring
     const handleAccessTokenExpiring = () => {
-      console.log('Access token expiring...')
+      logger.warn('Token expirando em breve')
     }
-
-    // Listen for access token expired
     const handleAccessTokenExpired = () => {
-      console.log('Access token expired')
+      logger.auth('token-expired')
       setUser(null)
     }
-
-    // Listen for silent renew error
     const handleSilentRenewError = (error: Error) => {
-      console.error('Silent renew error:', error)
+      logger.error('Erro ao renovar token silenciosamente', {}, error)
     }
 
     manager.events.addUserLoaded(handleUserLoaded)
@@ -82,43 +82,95 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const login = async () => {
-    try {
-      const manager = getUserManager()
-      await manager.signinRedirect()
-    } catch (error) {
-      console.error('Login failed:', error)
-      throw error
-    }
+    try { await getUserManager().signinRedirect() } catch (error) { console.error('Login failed:', error); throw error }
   }
 
   const logout = async () => {
+    const manager = getUserManager()
+    let user: User | null = null
     try {
-      const manager = getUserManager()
-      await manager.signoutRedirect()
-    } catch (error) {
-      console.error('Logout failed:', error)
-      throw error
+      user = await manager.getUser()
+      if (!user || !user.id_token) user = await manager.signinSilent()
+    } catch (e) { /* no-op */ }
+
+    const postLogout = oidcConfig.post_logout_redirect_uri || `${window.location.origin}/`
+    const endSession = oidcConfig.metadata?.end_session_endpoint
+    if (endSession) {
+      const params = new URLSearchParams()
+      params.set('post_logout_redirect_uri', postLogout)
+      if (user?.id_token) params.set('id_token_hint', user.id_token)
+      else params.set('client_id', oidcConfig.client_id)
+      try { await manager.removeUser() } catch (e) { void e }
+      window.location.href = `${endSession}?${params.toString()}`
+      return
     }
+    try { await manager.removeUser() } catch (e) { void e }
+    window.location.href = postLogout
   }
 
   const hasRole = (role: UserRole): boolean => {
-    if (!user) return false
-    const roles = (user.profile as any)?.realm_access?.roles || []
-    return roles.includes(role)
-  }
+    if (!user) {
+      logger.roleCheck('deny', role, { reason: 'user not authenticated' })
+      return false
+    }
+    
+    const profile = user.profile as { email?: string; preferred_username?: string; realm_access?: { roles?: string[] } }
+    const profileRoles = profile?.realm_access?.roles || []
+    let tokenRoles: string[] = []
+    
+    try {
+      const token = (user as unknown as { access_token?: string }).access_token
+      if (token) {
+        const payloadPart = token.split('.')[1]
+        if (payloadPart) {
+          const json = JSON.parse(atob(payloadPart.replace(/-/g, '+').replace(/_/g, '/')))
+          const ra = (json && json.realm_access && Array.isArray(json.realm_access.roles)) ? json.realm_access.roles : []
+          const rc = (json && json.resource_access && oidcConfig.client_id && json.resource_access[oidcConfig.client_id] && Array.isArray(json.resource_access[oidcConfig.client_id].roles)) ? json.resource_access[oidcConfig.client_id].roles : []
+          tokenRoles = [...ra, ...rc]
+        }
+      }
+    } catch (e) {
+      logger.error('Erro ao decodificar token para verificação de role', { role }, e as Error)
+    }
 
+    const all = new Set<string>([...profileRoles, ...tokenRoles].map(r => String(r)))
+    const hasAccess = all.has(role)
+    
+    logger.roleCheck(
+      hasAccess ? 'grant' : 'deny',
+      role,
+      {
+        userId: profile.email || profile.preferred_username,
+        availableRoles: Array.from(all),
+        source: tokenRoles.length > 0 ? 'token' : 'profile'
+      }
+    )
+    
+    return hasAccess
+  }
   const hasAnyRole = (roles: UserRole[]): boolean => {
-    if (!user) return false
-    return roles.some((role) => hasRole(role))
+    if (!user) {
+      logger.roleCheck('deny', roles, { reason: 'user not authenticated' })
+      return false
+    }
+    
+    const result = roles.some((role) => hasRole(role))
+    
+    if (!result) {
+      const profile = user.profile as { email?: string; preferred_username?: string }
+      logger.roleCheck('deny', roles, {
+        userId: profile.email || profile.preferred_username,
+        reason: 'none of the required roles matched'
+      })
+    }
+    
+    return result
   }
-
   const getAccessToken = async (): Promise<string | null> => {
     try {
-      const manager = getUserManager()
-      const currentUser = await manager.getUser()
-      return currentUser?.access_token || null
+      return (await getUserManager().getUser())?.access_token || null
     } catch (error) {
-      console.error('Failed to get access token:', error)
+      logger.error('Failed to get access token', {}, error as Error)
       return null
     }
   }
@@ -133,8 +185,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     hasAnyRole,
     getAccessToken,
   }
-
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+}
+
+function BypassAuthProvider({ children }: { children: ReactNode }) {
+  const MODE = import.meta.env.MODE
+  const ALL: UserRole[] = ['ADMIN', 'GESTOR', 'VIGILANCIA', 'CAMPO']
+  const parseRoles = (): UserRole[] => {
+    if (MODE !== 'e2e') return ALL
+    let roles: string[] = []
+    try {
+      const ls = typeof window !== 'undefined' ? window.localStorage.getItem('e2e-roles') : null
+      if (ls) roles = ls.split(',').map(s => s.trim().toUpperCase()).filter(Boolean)
+      if (!roles.length && typeof window !== 'undefined') {
+        const q = new URLSearchParams(window.location.search).get('roles')
+        if (q) roles = q.split(',').map(s => s.trim().toUpperCase()).filter(Boolean)
+      }
+    } catch { /* no-op */ }
+    const valid = roles.filter(r => (ALL as string[]).includes(r)) as UserRole[]
+    return valid.length ? valid : ALL
+  }
+  const hasRole = (role: UserRole): boolean => {
+    if (MODE === 'e2e') return parseRoles().includes(role)
+    return true
+  }
+  const hasAnyRole = (roles: UserRole[]): boolean => {
+    if (MODE === 'e2e') {
+      const eff = parseRoles()
+      return roles.some(r => eff.includes(r))
+    }
+    return true
+  }
+  const value: AuthContextType = {
+    user: null,
+    isAuthenticated: true,
+    isLoading: false,
+    login: async () => {},
+    logout: async () => {},
+    hasRole,
+    hasAnyRole,
+    getAccessToken: async () => null,
+  }
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+}
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true'
+  const MODE = import.meta.env.MODE
+  const OVERRIDE = DEMO_MODE || MODE === 'e2e'
+  return OVERRIDE ? <BypassAuthProvider>{children}</BypassAuthProvider> : <RealAuthProvider>{children}</RealAuthProvider>
 }
 
 export function useAuth(): AuthContextType {

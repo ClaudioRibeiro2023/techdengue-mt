@@ -110,31 +110,32 @@ class EPI01Service:
         
         try:
             with conn.cursor(cursor_factory=RealDictCursor) as cur:
-                # Filtros WHERE
-                where_clauses = ["ano = %s"]
+                # Filtros WHERE (indicador_epi: competencia, municipio_cod_ibge, indicador, valor)
+                where_clauses = ["EXTRACT(YEAR FROM competencia) = %s"]
                 params = [request.ano]
-                
+
                 if request.semana_epi_inicio and request.semana_epi_fim:
-                    where_clauses.append("semana_epi BETWEEN %s AND %s")
+                    where_clauses.append("EXTRACT(WEEK FROM competencia) BETWEEN %s AND %s")
                     params.extend([request.semana_epi_inicio, request.semana_epi_fim])
-                
+
                 if request.codigo_ibge:
-                    where_clauses.append("municipio_codigo = %s")
+                    where_clauses.append("municipio_cod_ibge = %s")
                     params.append(request.codigo_ibge)
-                
+
+                # Mapear doenca_tipo para indicador (atualmente só 'CASOS_DENGUE')
                 if request.doenca_tipo.value != "TODAS":
-                    where_clauses.append("doenca_tipo = %s")
-                    params.append(request.doenca_tipo.value)
-                
+                    where_clauses.append("indicador = %s")
+                    params.append("CASOS_DENGUE")
+
                 where_sql = " AND ".join(where_clauses)
                 
                 # Query de resumo
                 query_resumo = f"""
                     SELECT 
-                        SUM(casos_confirmados) as total_casos,
-                        SUM(obitos) as total_obitos,
-                        SUM(casos_graves) as casos_graves,
-                        COUNT(DISTINCT municipio_codigo) as municipios_afetados
+                        SUM(valor) as total_casos,
+                        0 as total_obitos,
+                        0 as casos_graves,
+                        COUNT(DISTINCT municipio_cod_ibge) as municipios_afetados
                     FROM indicador_epi
                     WHERE {where_sql}
                 """
@@ -165,57 +166,67 @@ class EPI01Service:
                 # Query de municípios
                 query_municipios = f"""
                     SELECT 
-                        municipio_codigo,
-                        SUM(casos_confirmados) as casos,
-                        SUM(obitos) as obitos
+                        municipio_cod_ibge,
+                        SUM(valor) as casos
                     FROM indicador_epi
                     WHERE {where_sql}
-                    GROUP BY municipio_codigo
+                    GROUP BY municipio_cod_ibge
                     ORDER BY casos DESC
                     LIMIT 20
                 """
                 
                 cur.execute(query_municipios, params)
                 rows_municipios = cur.fetchall()
-                
+
+                # Prefetch nomes e populações reais do IBGE
                 municipios = []
-                for row in rows_municipios:
-                    cod_ibge = row['municipio_codigo']
-                    casos = row['casos'] or 0
-                    obitos = row['obitos'] or 0
-                    
-                    mun_info = MT_MUNICIPIOS.get(cod_ibge)
-                    if not mun_info:
-                        continue
-                    
-                    pop = mun_info['pop']
-                    incidencia = (casos / pop * 100000) if pop > 0 else 0
-                    letalidade = (obitos / casos * 100) if casos > 0 else 0
-                    
-                    nivel_risco = self._classificar_risco(incidencia)
-                    
-                    municipios.append(DadosMunicipio(
-                        codigo_ibge=cod_ibge,
-                        nome=mun_info['nome'],
-                        populacao=pop,
-                        casos=casos,
-                        obitos=obitos,
-                        incidencia=round(incidencia, 2),
-                        taxa_letalidade=round(letalidade, 2),
-                        nivel_risco=nivel_risco
-                    ))
+                if rows_municipios:
+                    cods = [r['municipio_cod_ibge'] for r in rows_municipios]
+                    info_map = {}
+                    cur.execute(
+                        "SELECT codigo_ibge, nome, COALESCE(populacao_estimada_2025,1) AS pop FROM municipios_ibge WHERE codigo_ibge = ANY(%s)",
+                        (cods,)
+                    )
+                    for m in cur.fetchall():
+                        info_map[m['codigo_ibge']] = {
+                            'nome': m['nome'],
+                            'pop': int(m['pop'] or 1)
+                        }
+
+                    for row in rows_municipios:
+                        cod_ibge = row['municipio_cod_ibge']
+                        casos = int(row['casos'] or 0)
+                        obitos = 0
+                        mun_info = info_map.get(cod_ibge)
+                        if not mun_info:
+                            # Fallback: usar dicionário MT_MUNICIPIOS se disponível
+                            mun_info = MT_MUNICIPIOS.get(cod_ibge, {'nome': cod_ibge, 'pop': 1})
+                        pop = mun_info['pop'] or 1
+                        incidencia = (casos / pop * 100000) if pop > 0 else 0
+                        letalidade = 0.0
+
+                        nivel_risco = self._classificar_risco(incidencia)
+
+                        municipios.append(DadosMunicipio(
+                            codigo_ibge=cod_ibge,
+                            nome=mun_info['nome'],
+                            populacao=pop,
+                            casos=casos,
+                            obitos=obitos,
+                            incidencia=round(incidencia, 2),
+                            taxa_letalidade=round(letalidade, 2),
+                            nivel_risco=nivel_risco
+                        ))
                 
                 # Query de série temporal
                 query_serie = f"""
                     SELECT 
-                        semana_epi,
-                        SUM(casos_confirmados) as casos,
-                        SUM(obitos) as obitos,
-                        SUM(casos_graves) as casos_graves
+                        EXTRACT(WEEK FROM competencia) as semana_epi,
+                        SUM(valor) as casos
                     FROM indicador_epi
                     WHERE {where_sql}
-                    GROUP BY semana_epi
-                    ORDER BY semana_epi
+                    GROUP BY EXTRACT(WEEK FROM competencia)
+                    ORDER BY EXTRACT(WEEK FROM competencia)
                 """
                 
                 cur.execute(query_serie, params)
@@ -223,15 +234,15 @@ class EPI01Service:
                 
                 serie_temporal = []
                 for row in rows_serie:
-                    semana = row['semana_epi']
+                    semana = int(row['semana_epi']) if row['semana_epi'] else 0
                     serie_temporal.append(DadosSemana(
                         ano=request.ano,
                         semana_epi=semana,
                         data_inicio=f"{request.ano}-W{semana:02d}-1",
                         data_fim=f"{request.ano}-W{semana:02d}-7",
-                        casos=row['casos'] or 0,
-                        obitos=row['obitos'] or 0,
-                        casos_graves=row['casos_graves'] or 0
+                        casos=int(row['casos'] or 0),
+                        obitos=0,
+                        casos_graves=0
                     ))
                 
                 # Construir título

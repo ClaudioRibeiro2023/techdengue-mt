@@ -9,9 +9,9 @@ export default function UserMenu() {
   const menuRef = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
 
-  const userName = user?.profile?.name || (user?.profile as any)?.preferred_username || 'Usuário'
+  const userName = user?.profile?.name || (user?.profile as { preferred_username?: string })?.preferred_username || 'Usuário'
   const userEmail = user?.profile?.email || ''
-  const userRoles = (user?.profile as any)?.realm_access?.roles || []
+  const userRoles = (user?.profile as { realm_access?: { roles?: string[] } })?.realm_access?.roles || []
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -25,10 +25,17 @@ export default function UserMenu() {
   }, [])
 
   const handleLogout = async () => {
+    setIsOpen(false)
+    
     try {
+      // Usa o logout do OIDC que já inclui o id_token_hint automaticamente
       await logout()
     } catch (error) {
       console.error('Logout failed:', error)
+      // Fallback: limpa storage e redireciona para home
+      localStorage.clear()
+      sessionStorage.clear()
+      window.location.href = '/'
     }
   }
 

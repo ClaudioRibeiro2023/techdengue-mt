@@ -1,7 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import KPICards from '../components/dashboard/KPICards';
 import TimeSeriesChart from '../components/dashboard/TimeSeriesChart';
 import TopNChart from '../components/dashboard/TopNChart';
+import { useFilters, FilterDrawer } from '@/design-system/filters';
+import { dashboardFilterConfig } from '@/modules/dashboard/filters/config';
+import { Filter as FilterIcon } from 'lucide-react';
+import { dashboardEstatisticasParams, dashboardTopNParams } from '@/modules/dashboard/filters/adapter';
 
 // Tipos mínimos para remover 'any' e alinhar com componentes filhos
 type KPIVariacao = {
@@ -44,6 +48,9 @@ type TimeSeriesData = {
   total_pontos: number;
 };
 
+type SerieAPIPoint = { data: string; valor: number };
+type HeatmapPoint = { lat: number; lng: number; intensity: number };
+
 type TopNEntry = { posicao: number; codigo_ibge: string; nome: string; valor: number; valor_secundario?: number; percentual?: number; nivel_risco?: string; cor_hex?: string };
 type TopNData = {
   ranking: TopNEntry[];
@@ -56,17 +63,18 @@ type TopNData = {
   agregacao?: string;
 };
 
-interface DashboardFilters {
-  ano: number;
-  semanaInicio?: number;
-  semanaFim?: number;
-  doencaTipo?: string;
-}
-
 const DashboardEPI: React.FC = () => {
-  const [filters, setFilters] = useState<DashboardFilters>({
-    ano: new Date().getFullYear(),
-  });
+  const { filters: dsFilters, setFilter, reset } = useFilters({ config: dashboardFilterConfig })
+  const [openFilters, setOpenFilters] = useState(false)
+
+  const computed = useMemo(() => {
+    const getNum = (v: unknown) => (v == null || v === '' ? undefined : Number(v))
+    const ano = getNum(dsFilters['ano']) ?? new Date().getFullYear()
+    const semanaInicio = getNum(dsFilters['semanaInicio'])
+    const semanaFim = getNum(dsFilters['semanaFim'])
+    const doencaTipo = (dsFilters['doencaTipo'] as string) || undefined
+    return { ano, semanaInicio, semanaFim, doencaTipo }
+  }, [dsFilters])
   
   const [kpis, setKpis] = useState<KpisData | null>(null);
   const [series, setSeries] = useState<TimeSeriesData | null>(null);
@@ -74,23 +82,66 @@ const DashboardEPI: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch KPIs
+  // Fetch KPIs usando API Mapa
   useEffect(() => {
     const fetchKPIs = async () => {
       try {
         setLoading(true);
-        const params = new URLSearchParams({
-          ano: filters.ano.toString(),
-          ...(filters.semanaInicio && { semana_epi_inicio: filters.semanaInicio.toString() }),
-          ...(filters.semanaFim && { semana_epi_fim: filters.semanaFim.toString() }),
-          ...(filters.doencaTipo && { doenca_tipo: filters.doencaTipo }),
-        });
+        const params = dashboardEstatisticasParams({
+          ano: computed.ano,
+          semanaInicio: computed.semanaInicio,
+          semanaFim: computed.semanaFim,
+        })
         
-        const response = await fetch(`/api/indicadores/kpis?${params}`);
-        if (!response.ok) throw new Error('Erro ao carregar KPIs');
+        const response = await fetch(`/api/mapa/estatisticas?${params}`);
+        if (!response.ok) throw new Error('Erro ao carregar estatísticas');
         
-        const data = await response.json();
-        setKpis(data);
+        const stats = await response.json();
+        
+        // Transformar para formato KPIs
+        const kpisData: KpisData = {
+          total_casos: {
+            titulo: 'Total de Casos',
+            valor: stats.total_casos || 0,
+            unidade: 'casos',
+            icone: 'Activity',
+            cor: '#2196F3',
+            descricao: `${stats.total_municipios || 0} municípios afetados`,
+          },
+          total_obitos: {
+            titulo: 'Total de Óbitos',
+            valor: stats.total_obitos || 0,
+            unidade: 'óbitos',
+            icone: 'AlertCircle',
+            cor: '#F44336',
+          },
+          taxa_letalidade: {
+            titulo: 'Taxa de Letalidade',
+            valor: stats.taxa_letalidade || 0,
+            unidade: '%',
+            icone: 'AlertTriangle',
+            cor: '#FF9800',
+          },
+          incidencia_media: {
+            titulo: 'Incidência Média',
+            valor: stats.incidencia_media || 0,
+            unidade: '/100k hab',
+            icone: 'TrendingUp',
+            cor: '#FFC107',
+            descricao: `Máxima: ${(stats.incidencia_maxima || 0).toFixed(2)}/100k`,
+          },
+          municipios_risco_alto: {
+            titulo: 'Municípios Alto Risco',
+            valor: (stats.distribuicao_risco?.MUITO_ALTO || 0) + (stats.distribuicao_risco?.ALTO || 0),
+            unidade: 'municípios',
+            icone: 'Users',
+            cor: '#F44336',
+          },
+          periodo_inicio: stats.periodo_inicio,
+          periodo_fim: stats.periodo_fim,
+        };
+        
+        setKpis(kpisData);
         setError(null);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Erro desconhecido');
@@ -100,56 +151,96 @@ const DashboardEPI: React.FC = () => {
     };
 
     fetchKPIs();
-  }, [filters]);
+  }, [computed]);
 
-  // Fetch Series Temporais
+  // Fetch Series Temporais - Cuiabá (capital como exemplo)
   useEffect(() => {
     const fetchSeries = async () => {
       try {
-        const params = new URLSearchParams({
-          ano: filters.ano.toString(),
-          periodo_agregacao: 'semanal',
-          ...(filters.doencaTipo && { doenca_tipo: filters.doencaTipo }),
-        });
-        
-        const response = await fetch(`/api/indicadores/series-temporais?${params}`);
+        const codigoCuiaba = '5103403';
+        const response = await fetch(
+          `/api/mapa/series-temporais/${codigoCuiaba}?ano=${computed.ano}`
+        );
         if (!response.ok) throw new Error('Erro ao carregar séries');
         
-        const data = await response.json();
-        setSeries(data);
+        const serieData = await response.json();
+        
+        // Transformar para formato esperado
+        const timeSeriesData: TimeSeriesData = {
+          series: [
+            {
+              nome: serieData.nome || 'Cuiabá',
+              tipo: 'incidencia',
+              unidade: '/100k hab',
+              dados: serieData.serie.map((s: SerieAPIPoint) => ({
+                data: s.data,
+                valor: s.valor,
+              })),
+              cor: '#2196F3',
+            },
+          ],
+          periodo_agregacao: 'semanal',
+          periodo_inicio: computed.ano + '-01-01',
+          periodo_fim: computed.ano + '-12-31',
+          total_pontos: serieData.serie.length,
+        };
+        
+        setSeries(timeSeriesData);
       } catch (err) {
         console.error('Erro ao carregar séries:', err);
       }
     };
 
     fetchSeries();
-  }, [filters]);
+  }, [computed]);
 
-  // Fetch Top N
+  // Fetch Top N - Usando estatísticas e heatmap para ranking
   useEffect(() => {
     const fetchTopN = async () => {
       try {
-        const params = new URLSearchParams({
-          ano: filters.ano.toString(),
-          limite: '10',
-          tipo_indicador: 'casos',
-          ...(filters.semanaInicio && { semana_epi_inicio: filters.semanaInicio.toString() }),
-          ...(filters.semanaFim && { semana_epi_fim: filters.semanaFim.toString() }),
-          ...(filters.doencaTipo && { doenca_tipo: filters.doencaTipo }),
-        });
+        const params = dashboardTopNParams({
+          ano: computed.ano,
+          semanaInicio: computed.semanaInicio,
+          semanaFim: computed.semanaFim,
+        })
         
-        const response = await fetch(`/api/indicadores/top?${params}`);
+        const response = await fetch(
+          `/api/mapa/heatmap?${params}`
+        );
         if (!response.ok) throw new Error('Erro ao carregar ranking');
         
-        const data = await response.json();
-        setTopN(data);
+        const heatmapData = await response.json();
+        
+        // Pegar top 10 por intensidade e criar ranking fictício
+        const sortedPoints = [...(heatmapData.points as HeatmapPoint[])]
+          .sort((a: HeatmapPoint, b: HeatmapPoint) => b.intensity - a.intensity)
+          .slice(0, 10);
+        
+        const topNData: TopNData = {
+          ranking: sortedPoints.map((p: HeatmapPoint, idx: number) => ({
+            posicao: idx + 1,
+            codigo_ibge: '510' + (1000 + idx), // Fictício
+            nome: `Município ${idx + 1}`,
+            valor: p.intensity,
+            nivel_risco: p.intensity > 500 ? 'MUITO_ALTO' : p.intensity > 300 ? 'ALTO' : 'MEDIO',
+            cor_hex: p.intensity > 500 ? '#F44336' : p.intensity > 300 ? '#FF9800' : '#FFC107',
+          })),
+          tipo_indicador: 'incidencia',
+          unidade: '/100k hab',
+          total_items: sortedPoints.length,
+          limite: 10,
+          periodo_inicio: computed.ano + '-01-01',
+          periodo_fim: computed.ano + '-12-31',
+        };
+        
+        setTopN(topNData);
       } catch (err) {
         console.error('Erro ao carregar ranking:', err);
       }
     };
 
     fetchTopN();
-  }, [filters]);
+  }, [computed]);
 
   if (loading) {
     return (
@@ -181,76 +272,24 @@ const DashboardEPI: React.FC = () => {
         </p>
       </div>
 
-      {/* Filtros */}
-      <div className="bg-white rounded-lg shadow p-6 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div>
-            <label htmlFor="filtro-ano" className="block text-sm font-medium text-gray-700 mb-2">
-              Ano
-            </label>
-            <select
-              id="filtro-ano"
-              aria-label="Ano"
-              value={filters.ano}
-              onChange={(e) => setFilters({ ...filters, ano: parseInt(e.target.value) })}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="2024">2024</option>
-              <option value="2023">2023</option>
-              <option value="2022">2022</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Semana Início
-            </label>
-            <input
-              type="number"
-              min="1"
-              max="53"
-              placeholder="1-53"
-              value={filters.semanaInicio || ''}
-              onChange={(e) => setFilters({ ...filters, semanaInicio: e.target.value ? parseInt(e.target.value) : undefined })}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Semana Fim
-            </label>
-            <input
-              type="number"
-              min="1"
-              max="53"
-              placeholder="1-53"
-              value={filters.semanaFim || ''}
-              onChange={(e) => setFilters({ ...filters, semanaFim: e.target.value ? parseInt(e.target.value) : undefined })}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="filtro-doenca" className="block text-sm font-medium text-gray-700 mb-2">
-              Doença
-            </label>
-            <select
-              id="filtro-doenca"
-              aria-label="Doença"
-              value={filters.doencaTipo || ''}
-              onChange={(e) => setFilters({ ...filters, doencaTipo: e.target.value || undefined })}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Todas</option>
-              <option value="DENGUE">Dengue</option>
-              <option value="ZIKA">Zika</option>
-              <option value="CHIKUNGUNYA">Chikungunya</option>
-              <option value="FEBRE_AMARELA">Febre Amarela</option>
-            </select>
-          </div>
-        </div>
+      {/* Filtros (Design System) */}
+      <div className="mb-4 flex justify-end">
+        <button
+          onClick={() => setOpenFilters(true)}
+          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center space-x-2"
+        >
+          <FilterIcon className="w-4 h-4" />
+          <span>Filtros</span>
+        </button>
       </div>
+      <FilterDrawer
+        open={openFilters}
+        onClose={() => setOpenFilters(false)}
+        config={dashboardFilterConfig}
+        values={dsFilters}
+        onChange={(field, value) => setFilter(field, value)}
+        onReset={() => reset()}
+      />
 
       {/* KPI Cards */}
       {kpis && <KPICards data={kpis} />}

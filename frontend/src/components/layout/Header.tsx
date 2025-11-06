@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import UserMenu from '@/components/auth/UserMenu'
+import { RoleBadge } from '@/components/auth/RoleBadge'
 import { Menu, X, Map, BarChart3, LayoutDashboard, Upload, AlertTriangle, Settings, Sun, Moon, ChevronsLeft, ChevronsRight, ChevronRight, type LucideIcon } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { NAVIGATION } from '@/navigation/map'
@@ -58,8 +59,12 @@ export default function Header() {
     document.documentElement.classList.toggle('mobile-sidebar-open')
   }
 
+  const toggleMobileSubnav = () => {
+    document.documentElement.classList.toggle('mobile-submenu-open')
+  }
+
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-[920]">
+    <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-[950]">
       <div className="px-3 sm:px-4 lg:px-6">
         <div className="flex justify-between items-center h-16">
           {/* Logo and Brand */}
@@ -80,8 +85,12 @@ export default function Header() {
           {/* Right Side */}
           <div className="flex items-center gap-2">
             {/* Mobile: open primary sidebar as drawer */}
-            <button onClick={toggleMobileSidebar} className="md:hidden p-2 rounded-lg hover:bg-gray-100" title="Menu">
+            <button onClick={toggleMobileSidebar} className="md:hidden p-2 rounded-lg hover:bg-gray-100" title="Menu" aria-label="Abrir menu" data-testid="open-mobile-sidebar">
               <Menu className="w-6 h-6" />
+            </button>
+            {/* Mobile: open secondary submenu as drawer */}
+            <button onClick={toggleMobileSubnav} className="md:hidden p-2 rounded-lg hover:bg-gray-100" title="Submenu" aria-label="Abrir submenu" data-testid="open-mobile-subnav">
+              <ChevronsRight className="w-6 h-6" />
             </button>
             {/* Collapses */}
             <button onClick={toggleSidebar} className="hidden md:inline-flex p-2 rounded-lg hover:bg-gray-100" title="Recolher menu principal">
@@ -111,6 +120,7 @@ export default function Header() {
 
             {isAuthenticated ? (
               <>
+                <RoleBadge variant="compact" />
                 <UserMenu />
                 {/* Mobile Menu Button */}
                 <button
@@ -139,22 +149,22 @@ export default function Header() {
         {/* Breadcrumb row */}
         {isAuthenticated && (
           <div className="h-12 flex items-center justify-between border-t border-gray-200">
-            <nav className="flex items-center text-sm text-gray-500 gap-2">
+            <nav id="app-breadcrumb">
               <Link to="/" className="hover:text-gray-700">SIVEPI</Link>
               <ChevronRight className="w-4 h-4" />
               {activeModule?.group && (
                 <>
-                  <span className="uppercase tracking-wider">{activeModule.group}</span>
+                  <span className="crumb-group">{activeModule.group}</span>
                   <ChevronRight className="w-4 h-4" />
                 </>
               )}
-              <span className="font-semibold text-gray-700">{activeModule?.name || 'Início'}</span>
+              <span className="crumb-name">{activeModule?.name || 'Início'}</span>
             </nav>
             {activeModule?.id === 'mapa-vivo' && (
               <div id="filters-slot" className="flex items-center gap-2">
-                <button onClick={() => webmap.openPanel('filters')} className="px-3 py-1.5 text-sm rounded-md border border-gray-200 hover:bg-gray-50">Filtros</button>
-                <button onClick={() => webmap.openPanel('layers')} className="px-3 py-1.5 text-sm rounded-md border border-gray-200 hover:bg-gray-50">Camadas</button>
-                <button onClick={() => webmap.doExport()} className="px-3 py-1.5 text-sm rounded-md border border-gray-200 hover:bg-gray-50">Exportar</button>
+                <button onClick={() => webmap.openPanel('filters')} className="control-btn text-sm">Filtros</button>
+                <button onClick={() => webmap.openPanel('layers')} className="control-btn text-sm">Camadas</button>
+                <button onClick={() => webmap.doExport()} className="control-btn text-sm">Exportar</button>
               </div>
             )}
           </div>

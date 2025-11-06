@@ -15,7 +15,8 @@ from app.schemas.etl import (
     LIRaaImportResponse,
     ETLJobStatus,
     ETLJobList,
-    ETLSource
+    ETLSource,
+    ETLStatus
 )
 from app.services.sinan_etl_service import SINANETLService
 from app.services.liraa_etl_service import LIRaaETLService

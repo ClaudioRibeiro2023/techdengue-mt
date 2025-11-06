@@ -1,0 +1,18 @@
+{
+  "root": true,
+  "rules": {
+    "react-refresh/only-export-components": "off"
+  },
+  "overrides": [
+    {
+      "files": [
+        "src/components/auth/RestrictedFeature.tsx",
+        "src/contexts/AuthContext.tsx",
+        "src/modules/webmap/context.tsx"
+      ],
+      "rules": {
+        "react-refresh/only-export-components": "off"
+      }
+    }
+  ]
+}

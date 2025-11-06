@@ -330,7 +330,7 @@ class DBService {
   }
 
   async getEvidencias(_atividadeId?: string): Promise<unknown[]> {
-    // TODO: implementar filtro por index se _atividadeId fornecido
+    void _atividadeId
     return this.getAll(STORES.EVIDENCIAS);
   }
 

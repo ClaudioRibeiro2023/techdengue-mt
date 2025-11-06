@@ -125,6 +125,8 @@ def configure_cors(app):
     # Origens permitidas
     allowed_origins = [
         "http://localhost:3000",
+        "http://localhost:6000",
+        "http://localhost:6080",
         "http://localhost:5173",
         "https://techdengue.mt.gov.br",
         "https://app.techdengue.mt.gov.br",

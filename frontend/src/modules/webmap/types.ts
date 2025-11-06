@@ -10,7 +10,7 @@ export type WebMapFilter = {
   id: string
   field: string
   op: 'eq' | 'neq' | 'gt' | 'gte' | 'lt' | 'lte' | 'in' | 'between' | 'ilike'
-  value: string | number | boolean | Array<string | number> | { min: number; max: number }
+  value: string | number | boolean | Array<string | number> | { min: string | number; max: string | number }
 }
 
 export type WebMapState = {

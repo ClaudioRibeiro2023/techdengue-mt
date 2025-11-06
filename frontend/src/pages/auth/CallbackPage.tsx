@@ -21,9 +21,13 @@ export default function CallbackPage() {
 
         const manager = getUserManager()
         const user = await manager.signinRedirectCallback()
-        
-        // Get the return URL from state or default to home
-        const returnUrl = (user.state as any)?.returnUrl || '/'
+        const s = user.state as unknown
+        let returnUrl = '/'
+        if (s && typeof s === 'object') {
+          const rec = s as Record<string, unknown>
+          const rv = rec['returnUrl']
+          if (typeof rv === 'string' && rv.length > 0) returnUrl = rv
+        }
         navigate(returnUrl, { replace: true })
       } catch (err) {
         console.error('Callback error:', err)

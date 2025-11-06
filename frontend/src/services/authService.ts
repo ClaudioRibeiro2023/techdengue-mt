@@ -5,18 +5,18 @@ import { User, UserManager, WebStorageStateStore } from 'oidc-client-ts';
 
 const KEYCLOAK_URL = import.meta.env.VITE_KEYCLOAK_URL || 'http://localhost:8080';
 const KEYCLOAK_REALM = import.meta.env.VITE_KEYCLOAK_REALM || 'techdengue';
-const KEYCLOAK_CLIENT_ID = import.meta.env.VITE_KEYCLOAK_CLIENT_ID || 'techdengue-frontend';
+const KEYCLOAK_CLIENT_ID = import.meta.env.VITE_KEYCLOAK_CLIENT_ID || 'techdengue-api';
 
 const config = {
   authority: `${KEYCLOAK_URL}/realms/${KEYCLOAK_REALM}`,
   client_id: KEYCLOAK_CLIENT_ID,
-  redirect_uri: `${window.location.origin}/callback`,
+  redirect_uri: `${window.location.origin}/auth/callback`,
   post_logout_redirect_uri: `${window.location.origin}/`,
   response_type: 'code',
   scope: 'openid profile email',
   userStore: new WebStorageStateStore({ store: window.localStorage }),
   automaticSilentRenew: true,
-  silent_redirect_uri: `${window.location.origin}/silent-renew.html`,
+  silent_redirect_uri: `${window.location.origin}/auth/silent-renew`,
 };
 
 class AuthService {

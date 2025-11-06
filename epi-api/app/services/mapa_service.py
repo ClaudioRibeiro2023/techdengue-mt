@@ -73,7 +73,7 @@ class MapaService:
         dt_inicio = self._competencia_to_date(competencia_inicio)
         dt_fim = self._competencia_to_date(competencia_fim)
         
-        # Query aggregated data by municipality
+        # Query aggregated data by municipality (using aggregated indicador_epi)
         conn = psycopg2.connect(self.conn_str)
         try:
             with conn.cursor(cursor_factory=RealDictCursor) as cur:
@@ -81,19 +81,18 @@ class MapaService:
                 params = [dt_inicio, dt_fim]
                 
                 if municipios:
-                    municipio_filter = "AND municipio_cod_ibge = ANY(%s)"
+                    municipio_filter = "AND ie.municipio_cod_ibge = ANY(%s)"
                     params.append(municipios)
                 
                 query = f"""
                     SELECT 
-                        municipio_cod_ibge,
-                        COUNT(*) as total_casos,
-                        COUNT(*) FILTER (WHERE evolucao = 'OBITO') as total_obitos,
-                        COUNT(*) FILTER (WHERE classificacao_final LIKE 'DENGUE%%') as casos_confirmados
-                    FROM indicador_epi
-                    WHERE competencia >= %s AND competencia <= %s
+                        ie.municipio_cod_ibge,
+                        SUM(ie.valor) as total_casos
+                    FROM indicador_epi ie
+                    WHERE ie.indicador = 'CASOS_DENGUE'
+                      AND ie.competencia >= %s AND ie.competencia <= %s
                       {municipio_filter}
-                    GROUP BY municipio_cod_ibge
+                    GROUP BY ie.municipio_cod_ibge
                     ORDER BY total_casos DESC
                     LIMIT %s
                 """
@@ -101,36 +100,55 @@ class MapaService:
                 
                 cur.execute(query, params)
                 rows = cur.fetchall()
+                
+                # Preload municipio info (nome, pop) and centroid coords for returned codes
+                cods = [r['municipio_cod_ibge'] for r in rows]
+                info = {}
+                coords = {}
+                if cods:
+                    cur.execute(
+                        "SELECT codigo_ibge, nome, COALESCE(populacao_estimada_2025, 1) AS pop FROM municipios_ibge WHERE codigo_ibge = ANY(%s)",
+                        (cods,)
+                    )
+                    for r in cur.fetchall():
+                        info[r['codigo_ibge']] = {
+                            'nome': r['nome'],
+                            'pop': int(r['pop']) if r['pop'] else 1
+                        }
+                    # Coordenadas a partir do centroide
+                    cur.execute(
+                        "SELECT codigo_ibge, ST_Y(centroide) AS lat, ST_X(centroide) AS lon FROM municipios_geometrias WHERE codigo_ibge = ANY(%s)",
+                        (cods,)
+                    )
+                    for r in cur.fetchall():
+                        coords[r['codigo_ibge']] = {'lat': float(r['lat'] or 0.0), 'lon': float(r['lon'] or 0.0)}
         finally:
             conn.close()
         
         # Build GeoJSON features
         features = []
         total_casos = 0
-        total_obitos = 0
         incidencias = []
         
         for row in rows:
             cod_ibge = row['municipio_cod_ibge']
-            casos = row['total_casos']
-            obitos = row['total_obitos']
-            
-            # Get municipality info
-            mun_info = MT_MUNICIPIOS.get(cod_ibge)
+            casos = int(row['total_casos'] or 0)
+            mun_info = info.get(cod_ibge)
             if not mun_info:
-                continue  # Skip if municipality not in reference data
-            
-            pop = mun_info['pop']
-            incidencia = (casos / pop * 100000) if pop > 0 else 0.0
-            letalidade = (obitos / casos * 100) if casos > 0 else 0.0
+                continue
+            pop = mun_info['pop'] or 1
+            incidencia = (casos / pop * 100000.0) if pop > 0 else 0.0
+            letalidade = 0.0
             
             # Risk classification based on incidence
             classe_risco, cor_hex = self._classify_risk_incidencia(incidencia)
             
+            # Coordenadas do centroide
+            c = coords.get(cod_ibge, {'lat': 0.0, 'lon': 0.0})
             feature = GeoJSONFeature(
                 geometry=GeoJSONGeometry(
                     type="Point",
-                    coordinates=[mun_info['lon'], mun_info['lat']]
+                    coordinates=[c['lon'], c['lat']]
                 ),
                 properties=MunicipioProperties(
                     municipio_cod_ibge=cod_ibge,
@@ -138,7 +156,7 @@ class MapaService:
                     populacao=pop,
                     casos=casos,
                     incidencia=round(incidencia, 2),
-                    obitos=obitos,
+                    obitos=0,
                     letalidade=round(letalidade, 2),
                     classe_risco=classe_risco,
                     cor_hex=cor_hex
@@ -147,7 +165,6 @@ class MapaService:
             features.append(feature)
             
             total_casos += casos
-            total_obitos += obitos
             incidencias.append(incidencia)
         
         incidencia_media = sum(incidencias) / len(incidencias) if incidencias else 0.0
@@ -163,7 +180,7 @@ class MapaService:
             competencia_fim=competencia_fim,
             total_municipios=len(features),
             total_casos=total_casos,
-            total_obitos=total_obitos,
+            total_obitos=0,
             incidencia_media=round(incidencia_media, 2),
             data=GeoJSONFeatureCollection(features=features),
             metadata=metadata
@@ -242,35 +259,32 @@ class MapaService:
         conn = psycopg2.connect(self.conn_str)
         try:
             with conn.cursor(cursor_factory=RealDictCursor) as cur:
-                # Montar query baseada nos filtros
                 where_clauses = []
                 params = []
                 
                 if filtro.ano:
-                    where_clauses.append("ano = %s")
+                    where_clauses.append("EXTRACT(YEAR FROM competencia) = %s")
                     params.append(filtro.ano)
                 
                 if filtro.semana_epi_inicio and filtro.semana_epi_fim:
-                    where_clauses.append("semana_epi BETWEEN %s AND %s")
+                    where_clauses.append("EXTRACT(WEEK FROM competencia) BETWEEN %s AND %s")
                     params.extend([filtro.semana_epi_inicio, filtro.semana_epi_fim])
                 
                 if filtro.municipios:
-                    where_clauses.append("municipio_codigo = ANY(%s)")
+                    where_clauses.append("municipio_cod_ibge = ANY(%s)")
                     params.append(filtro.municipios)
                 
-                if filtro.doenca_tipo:
-                    where_clauses.append("doenca_tipo = %s")
-                    params.append(filtro.doenca_tipo)
+                where_clauses.append("indicador = 'CASOS_DENGUE'")
                 
                 where_sql = "WHERE " + " AND ".join(where_clauses) if where_clauses else ""
                 
                 query = f"""
                     SELECT 
-                        municipio_codigo,
-                        SUM(casos_confirmados) as casos
+                        municipio_cod_ibge,
+                        SUM(valor) as casos
                     FROM indicador_epi
                     {where_sql}
-                    GROUP BY municipio_codigo
+                    GROUP BY municipio_cod_ibge
                     ORDER BY casos DESC
                     LIMIT %s
                 """
@@ -286,19 +300,32 @@ class MapaService:
         max_intensity = 0.0
         
         for row in rows:
-            cod_ibge = row['municipio_codigo']
-            casos = row['casos']
+            cod_ibge = row['municipio_cod_ibge']
+            casos = int(row['casos'] or 0)
             
-            mun_info = MT_MUNICIPIOS.get(cod_ibge)
-            if not mun_info:
-                continue
+            # Carregar população e coordenadas
+            pop = 1
+            lat = lon = 0.0
+            try:
+                conn = psycopg2.connect(self.conn_str)
+                with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                    cur.execute("SELECT COALESCE(populacao_estimada_2025,1) AS pop FROM municipios_ibge WHERE codigo_ibge=%s", (cod_ibge,))
+                    r = cur.fetchone()
+                    if r:
+                        pop = int(r['pop'] or 1)
+                    cur.execute("SELECT ST_Y(centroide) AS lat, ST_X(centroide) AS lon FROM municipios_geometrias WHERE codigo_ibge=%s", (cod_ibge,))
+                    r2 = cur.fetchone()
+                    if r2:
+                        lat = float(r2['lat'] or 0.0)
+                        lon = float(r2['lon'] or 0.0)
+            finally:
+                conn.close()
             
-            # Calcular intensidade (incidência)
-            intensity = (casos / mun_info['pop'] * 100000) if mun_info['pop'] > 0 else 0
+            intensity = (casos / pop * 100000) if pop > 0 else 0
             
             points.append(HeatmapPoint(
-                lat=mun_info['lat'],
-                lng=mun_info['lon'],
+                lat=lat,
+                lng=lon,
                 intensity=round(intensity, 2)
             ))
             
@@ -332,30 +359,28 @@ class MapaService:
                 params = []
                 
                 if filtro.ano:
-                    where_clauses.append("ano = %s")
+                    where_clauses.append("EXTRACT(YEAR FROM competencia) = %s")
                     params.append(filtro.ano)
                 
                 if filtro.semana_epi_inicio and filtro.semana_epi_fim:
-                    where_clauses.append("semana_epi BETWEEN %s AND %s")
+                    where_clauses.append("EXTRACT(WEEK FROM competencia) BETWEEN %s AND %s")
                     params.extend([filtro.semana_epi_inicio, filtro.semana_epi_fim])
                 
-                if filtro.doenca_tipo:
-                    where_clauses.append("doenca_tipo = %s")
-                    params.append(filtro.doenca_tipo)
+                where_clauses.append("indicador = 'CASOS_DENGUE'")
                 
                 where_sql = "WHERE " + " AND ".join(where_clauses) if where_clauses else ""
                 
-                # Query principal
+                # Query principal (agregado)
                 query = f"""
                     SELECT 
-                        COUNT(DISTINCT municipio_codigo) as total_municipios,
-                        SUM(casos_confirmados) as total_casos,
-                        SUM(obitos) as total_obitos,
-                        municipio_codigo,
-                        SUM(casos_confirmados) as casos_mun
+                        COUNT(DISTINCT municipio_cod_ibge) as total_municipios,
+                        SUM(valor) as total_casos,
+                        0 as total_obitos,
+                        municipio_cod_ibge,
+                        SUM(valor) as casos_mun
                     FROM indicador_epi
                     {where_sql}
-                    GROUP BY municipio_codigo
+                    GROUP BY municipio_cod_ibge
                 """
                 
                 cur.execute(query, params)
@@ -377,8 +402,8 @@ class MapaService:
                 
                 # Calcular totais
                 total_municipios = len(rows)
-                total_casos = sum(r['casos_mun'] for r in rows)
-                total_obitos = sum(r.get('total_obitos', 0) or 0 for r in rows)
+                total_casos = sum(int(r['casos_mun'] or 0) for r in rows)
+                total_obitos = 0
                 
                 taxa_letalidade = (total_obitos / total_casos * 100) if total_casos > 0 else 0.0
                 
@@ -390,14 +415,16 @@ class MapaService:
                 distribuicao_risco = {"BAIXO": 0, "MEDIO": 0, "ALTO": 0, "MUITO_ALTO": 0}
                 
                 for row in rows:
-                    cod_ibge = row['municipio_codigo']
-                    casos = row['casos_mun']
+                    cod_ibge = row['municipio_cod_ibge']
+                    casos = int(row['casos_mun'] or 0)
                     
-                    mun_info = MT_MUNICIPIOS.get(cod_ibge)
-                    if not mun_info:
-                        continue
-                    
-                    incidencia = (casos / mun_info['pop'] * 100000) if mun_info['pop'] > 0 else 0
+                    # Buscar população
+                    pop = 1
+                    cur.execute("SELECT COALESCE(populacao_estimada_2025,1) AS pop FROM municipios_ibge WHERE codigo_ibge=%s", (cod_ibge,))
+                    r = cur.fetchone()
+                    if r:
+                        pop = int(r['pop'] or 1)
+                    incidencia = (casos / pop * 100000) if pop > 0 else 0
                     incidencias.append(incidencia)
                     
                     if incidencia > max_incidencia:
@@ -405,7 +432,10 @@ class MapaService:
                     
                     if casos > max_casos_valor:
                         max_casos_valor = casos
-                        municipio_max_casos = mun_info['nome']
+                        # nome do município
+                        cur.execute("SELECT nome FROM municipios_ibge WHERE codigo_ibge=%s", (cod_ibge,))
+                        r2 = cur.fetchone()
+                        municipio_max_casos = r2['nome'] if r2 and r2.get('nome') else None
                     
                     # Classificar risco
                     if incidencia < 100:
@@ -455,25 +485,24 @@ class MapaService:
         try:
             with conn.cursor(cursor_factory=RealDictCursor) as cur:
                 where_clauses = [
-                    "municipio_codigo = %s",
-                    "ano = %s"
+                    "municipio_cod_ibge = %s",
+                    "EXTRACT(YEAR FROM competencia) = %s"
                 ]
                 params = [codigo_ibge, ano]
                 
                 if doenca_tipo:
-                    where_clauses.append("doenca_tipo = %s")
-                    params.append(doenca_tipo)
+                    where_clauses.append("indicador = 'CASOS_DENGUE'")
                 
                 where_sql = " AND ".join(where_clauses)
                 
                 query = f"""
                     SELECT 
-                        semana_epi,
-                        SUM(casos_confirmados) as casos
+                        EXTRACT(WEEK FROM competencia) as semana_epi,
+                        SUM(valor) as casos
                     FROM indicador_epi
                     WHERE {where_sql}
-                    GROUP BY semana_epi
-                    ORDER BY semana_epi
+                    GROUP BY EXTRACT(WEEK FROM competencia)
+                    ORDER BY EXTRACT(WEEK FROM competencia)
                 """
                 
                 cur.execute(query, params)
@@ -482,16 +511,28 @@ class MapaService:
             conn.close()
         
         # Obter info do município
-        mun_info = MT_MUNICIPIOS.get(codigo_ibge, {"nome": "Desconhecido", "pop": 1})
+        # Nome e população reais
+        nom = "Desconhecido"
+        pop = 1
+        try:
+            conn = psycopg2.connect(self.conn_str)
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute("SELECT nome, COALESCE(populacao_estimada_2025,1) AS pop FROM municipios_ibge WHERE codigo_ibge=%s", (codigo_ibge,))
+                r = cur.fetchone()
+                if r:
+                    nom = r['nome'] or nom
+                    pop = int(r['pop'] or 1)
+        finally:
+            conn.close()
         
         # Construir série
         serie = []
         for row in rows:
-            semana = row['semana_epi']
-            casos = row['casos']
+            semana = int(row['semana_epi']) if row['semana_epi'] else 0
+            casos = int(row['casos']) if row['casos'] else 0
             
             # Calcular incidência
-            incidencia = (casos / mun_info['pop'] * 100000) if mun_info['pop'] > 0 else 0
+            incidencia = (casos / pop * 100000) if pop > 0 else 0
             
             serie.append(SerieTemporal(
                 data=f"{ano}-W{semana:02d}",
@@ -500,6 +541,6 @@ class MapaService:
         
         return SerieTemporalMunicipio(
             codigo_ibge=codigo_ibge,
-            nome=mun_info['nome'],
+            nome=nom,
             serie=serie
         )

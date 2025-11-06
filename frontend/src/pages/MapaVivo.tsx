@@ -1,64 +1,85 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { MapContainer, TileLayer, GeoJSON, Circle } from 'react-leaflet';
 import L, { LatLngExpression, PathOptions } from 'leaflet';
-import type { Feature, FeatureCollection, Geometry } from 'geojson';
+import type { Feature, FeatureCollection, Geometry, Point } from 'geojson';
 import axios from 'axios';
 import { getAuthHeader } from '../services/authService';
 import { Layers, Filter, Download } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
+import { useFilters, FilterDrawer } from '@/design-system/filters';
+import { webmapFilterConfig } from '@/modules/webmap/filters/config';
+import { webmapHeatmapParams, webmapCamadasParams } from '@/modules/webmap/filters/adapter';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+const API_BASE = '/api';
+const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
 
 // Centro de MT (Cuiabá)
 const MT_CENTER: LatLngExpression = [-15.6014, -56.0979];
 
 interface HeatmapPoint {
-  latitude: number;
-  longitude: number;
-  intensidade: number;
+  lat: number;
+  lng: number;
+  intensity: number;
 }
 
-interface MapFilters {
-  ano: number;
-  semanaInicio?: number;
-  semanaFim?: number;
-  doenca?: string;
-  tipoCamada: string;
-}
+// Filtros são gerenciados pelo Design System (useFilters)
 
 // Propriedades esperadas nos polígonos de municípios
 interface MunicipioProps {
-  nome: string;
-  valor?: number;
-  nivel_risco?: 'BAIXO' | 'MEDIO' | 'ALTO' | 'MUITO_ALTO' | string;
+  municipio_cod_ibge: string;
+  municipio_nome: string;
+  populacao: number;
+  casos: number;
+  incidencia: number;
+  obitos: number;
+  letalidade: number;
+  classe_risco: 'baixo' | 'medio' | 'alto' | 'muito_alto' | string;
+  cor_hex?: string;
 }
 
 const MapaVivo: React.FC = () => {
-  const [filters, setFilters] = useState<MapFilters>({
-    ano: new Date().getFullYear(),
-    tipoCamada: 'INCIDENCIA',
-  });
+  const { filters: dsFilters, setFilter, reset } = useFilters({ config: webmapFilterConfig });
 
   const [heatmapData, setHeatmapData] = useState<HeatmapPoint[]>([]);
   const [choroplethData, setChoroplethData] = useState<FeatureCollection<Geometry, MunicipioProps> | null>(null);
   const [loading, setLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
 
+  // Valores derivados dos filtros (sempre consistentes)
+  const computed = useMemo(() => {
+    const getNum = (v: unknown) => (v == null || v === '' ? undefined : Number(v));
+    const ano = getNum(dsFilters['ano']) ?? new Date().getFullYear();
+    const semanaInicio = getNum(dsFilters['semanaInicio']);
+    const semanaFim = getNum(dsFilters['semanaFim']);
+    const doenca = (dsFilters['doenca'] as string) || undefined;
+    const tipoCamada = String(dsFilters['tipoCamada'] ?? 'INCIDENCIA');
+    return { ano, semanaInicio, semanaFim, doenca, tipoCamada };
+  }, [dsFilters]);
+
   // Fetch heatmap
   useEffect(() => {
     const fetchHeatmap = async () => {
       try {
         setLoading(true);
-        const headers = await getAuthHeader();
-        const params = new URLSearchParams({
-          ano: filters.ano.toString(),
-          ...(filters.semanaInicio && { semana_epi_inicio: filters.semanaInicio.toString() }),
-          ...(filters.semanaFim && { semana_epi_fim: filters.semanaFim.toString() }),
-          ...(filters.doenca && { doenca_tipo: filters.doenca }),
-        });
+        if (DEMO_MODE) {
+          setHeatmapData([
+            { lat: -15.6014, lng: -56.0979, intensity: 8 },
+            { lat: -16.4672, lng: -54.6356, intensity: 5 },
+            { lat: -10.1841, lng: -59.4560, intensity: 3 },
+          ]);
+          return;
+        }
 
-        const response = await axios.get(`${API_URL}/mapa/heatmap?${params}`, { headers });
-        setHeatmapData(response.data.pontos || []);
+        const headers = await getAuthHeader();
+        const params = webmapHeatmapParams({
+          ano: computed.ano,
+          semanaInicio: computed.semanaInicio,
+          semanaFim: computed.semanaFim,
+          doenca: computed.doenca,
+        })
+
+        const response = await axios.get(`${API_BASE}/mapa/heatmap?${params}`, { headers });
+        setHeatmapData(response.data.points || []);
       } catch (error) {
         console.error('Erro ao carregar heatmap:', error);
       } finally {
@@ -67,54 +88,99 @@ const MapaVivo: React.FC = () => {
     };
 
     fetchHeatmap();
-  }, [filters]);
+  }, [computed]);
 
-  // Fetch choropleth
+  // Fetch camadas (GeoJSON) - incidência por município
   useEffect(() => {
     const fetchChoropleth = async () => {
       try {
-        const headers = await getAuthHeader();
-        const params = new URLSearchParams({
-          ano: filters.ano.toString(),
-          tipo_camada: filters.tipoCamada,
-          ...(filters.semanaInicio && { semana_epi_inicio: filters.semanaInicio.toString() }),
-          ...(filters.semanaFim && { semana_epi_fim: filters.semanaFim.toString() }),
-          ...(filters.doenca && { doenca_tipo: filters.doenca }),
-        });
+        if (DEMO_MODE) {
+          const demoData: FeatureCollection<Geometry, MunicipioProps> = {
+            type: 'FeatureCollection',
+            features: [
+              {
+                type: 'Feature',
+                geometry: { type: 'Point', coordinates: [-56.0979, -15.6014] },
+                properties: {
+                  municipio_cod_ibge: '5103403',
+                  municipio_nome: 'Cuiabá',
+                  populacao: 600000,
+                  casos: 1200,
+                  incidencia: 200.0,
+                  obitos: 2,
+                  letalidade: 0.17,
+                  classe_risco: 'alto',
+                  cor_hex: '#FF9800',
+                },
+              },
+              {
+                type: 'Feature',
+                geometry: { type: 'Point', coordinates: [-56.1325, -15.6458] },
+                properties: {
+                  municipio_cod_ibge: '5108402',
+                  municipio_nome: 'Várzea Grande',
+                  populacao: 300000,
+                  casos: 450,
+                  incidencia: 150.0,
+                  obitos: 1,
+                  letalidade: 0.22,
+                  classe_risco: 'medio',
+                  cor_hex: '#FFC107',
+                },
+              },
+              {
+                type: 'Feature',
+                geometry: { type: 'Point', coordinates: [-54.6356, -16.4672] },
+                properties: {
+                  municipio_cod_ibge: '5107602',
+                  municipio_nome: 'Rondonópolis',
+                  populacao: 240000,
+                  casos: 800,
+                  incidencia: 333.3,
+                  obitos: 3,
+                  letalidade: 0.37,
+                  classe_risco: 'muito_alto',
+                  cor_hex: '#F44336',
+                },
+              },
+            ],
+          };
+          setChoroplethData(demoData);
+          return;
+        }
 
-        const response = await axios.get(`${API_URL}/mapa/camadas?${params}`, { headers });
-        setChoroplethData(response.data);
+        const headers = await getAuthHeader();
+        const params = webmapCamadasParams({
+          ano: computed.ano,
+          tipoCamada: computed.tipoCamada,
+          doenca: computed.doenca,
+        })
+
+        const response = await axios.get(`${API_BASE}/mapa/camadas?${params}`, { headers });
+        setChoroplethData(response.data?.data || null);
       } catch (error) {
         console.error('Erro ao carregar camadas:', error);
       }
     };
 
     fetchChoropleth();
-  }, [filters]);
+  }, [computed]);
 
   const onEachFeature = (feature: Feature<Geometry, MunicipioProps>, layer: L.Layer) => {
     if (feature.properties) {
-      const { nome, valor, nivel_risco } = feature.properties;
+      const { municipio_nome, incidencia, classe_risco } = feature.properties;
       layer.bindPopup(`
         <div class="p-2">
-          <h3 class="font-bold">${nome}</h3>
-          <p>Incidência: ${valor ? valor.toFixed(2) : 'N/A'}/100k</p>
-          <p>Risco: <span class="font-semibold">${nivel_risco}</span></p>
+          <h3 class="font-bold">${municipio_nome}</h3>
+          <p>Incidência: ${typeof incidencia === 'number' ? incidencia.toFixed(2) : 'N/A'}/100k</p>
+          <p>Risco: <span class="font-semibold">${classe_risco}</span></p>
         </div>
       `);
     }
   };
 
   const getFeatureStyle = (feature?: Feature<Geometry, MunicipioProps>): PathOptions => {
-    const nivel = feature?.properties?.nivel_risco;
-    const colors: Record<string, string> = {
-      BAIXO: '#4CAF50',
-      MEDIO: '#FFC107',
-      ALTO: '#FF9800',
-      MUITO_ALTO: '#F44336',
-    };
-
-    const fillColor = (nivel && colors[nivel]) ? colors[nivel] : '#2196F3';
+    const fillColor = feature?.properties?.cor_hex || '#2196F3';
 
     return {
       fillColor,
@@ -160,79 +226,16 @@ const MapaVivo: React.FC = () => {
           </div>
         </div>
 
-        {/* Painel de filtros */}
+        {/* Drawer de Filtros (Design System) */}
         {showFilters && (
-          <div className="mt-4 p-4 bg-gray-50 rounded-lg grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <label htmlFor="map-ano" className="block text-sm font-medium mb-2">Ano</label>
-              <select
-                id="map-ano"
-                aria-label="Ano"
-                value={filters.ano}
-                onChange={(e) => setFilters({ ...filters, ano: parseInt(e.target.value) })}
-                className="w-full border rounded-md px-3 py-2"
-              >
-                <option value="2024">2024</option>
-                <option value="2023">2023</option>
-                <option value="2022">2022</option>
-              </select>
-            </div>
-
-            <div>
-              <label htmlFor="map-doenca" className="block text-sm font-medium mb-2">Doença</label>
-              <select
-                id="map-doenca"
-                aria-label="Doença"
-                value={filters.doenca || ''}
-                onChange={(e) => setFilters({ ...filters, doenca: e.target.value || undefined })}
-                className="w-full border rounded-md px-3 py-2"
-              >
-                <option value="">Todas</option>
-                <option value="DENGUE">Dengue</option>
-                <option value="ZIKA">Zika</option>
-                <option value="CHIKUNGUNYA">Chikungunya</option>
-              </select>
-            </div>
-
-            <div>
-              <label htmlFor="map-camada" className="block text-sm font-medium mb-2">Camada</label>
-              <select
-                id="map-camada"
-                aria-label="Camada"
-                value={filters.tipoCamada}
-                onChange={(e) => setFilters({ ...filters, tipoCamada: e.target.value })}
-                className="w-full border rounded-md px-3 py-2"
-              >
-                <option value="INCIDENCIA">Incidência</option>
-                <option value="IPO">IPO (Pendências)</option>
-                <option value="IDO">IDO (Depósitos)</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">Semanas</label>
-              <div className="flex space-x-2">
-                <input
-                  type="number"
-                  min="1"
-                  max="53"
-                  placeholder="Início"
-                  value={filters.semanaInicio || ''}
-                  onChange={(e) => setFilters({ ...filters, semanaInicio: e.target.value ? parseInt(e.target.value) : undefined })}
-                  className="w-full border rounded-md px-3 py-2"
-                />
-                <input
-                  type="number"
-                  min="1"
-                  max="53"
-                  placeholder="Fim"
-                  value={filters.semanaFim || ''}
-                  onChange={(e) => setFilters({ ...filters, semanaFim: e.target.value ? parseInt(e.target.value) : undefined })}
-                  className="w-full border rounded-md px-3 py-2"
-                />
-              </div>
-            </div>
-          </div>
+          <FilterDrawer
+            open={showFilters}
+            onClose={() => setShowFilters(false)}
+            config={webmapFilterConfig}
+            values={dsFilters}
+            onChange={(field, value) => setFilter(field, value)}
+            onReset={() => reset()}
+          />
         )}
       </div>
 
@@ -254,6 +257,15 @@ const MapaVivo: React.FC = () => {
             data={choroplethData}
             style={getFeatureStyle}
             onEachFeature={onEachFeature}
+            pointToLayer={(feature: Feature<Point, MunicipioProps>, latlng) =>
+              L.circleMarker(latlng, {
+                radius: 6,
+                color: feature.properties?.cor_hex || '#2196F3',
+                fillColor: feature.properties?.cor_hex || '#2196F3',
+                fillOpacity: 0.7,
+                weight: 1,
+              })
+            }
           />
         )}
 
@@ -261,8 +273,8 @@ const MapaVivo: React.FC = () => {
         {heatmapData.map((point, idx) => (
           <Circle
             key={idx}
-            center={[point.latitude, point.longitude]}
-            radius={point.intensidade * 100}
+            center={[point.lat, point.lng]}
+            radius={Math.max(100, point.intensity * 50)}
             pathOptions={{
               fillColor: '#FF6B6B',
               fillOpacity: 0.4,

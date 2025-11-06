@@ -9,10 +9,10 @@ ADMIN_USER = 'admin'
 ADMIN_PASS = 'admin'
 
 REDIRECTS = [
-    'http://localhost:3000/*',
+    'http://localhost:6080/*',
 ]
 ORIGINS = [
-    'http://localhost:3000',
+    'http://localhost:6080',
 ]
 
 def tok():

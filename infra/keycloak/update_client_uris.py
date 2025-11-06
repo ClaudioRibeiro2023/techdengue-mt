@@ -8,14 +8,16 @@ ADMIN_USER = 'admin'
 ADMIN_PASS = 'admin'
 
 ADD_REDIRECTS = [
-    'http://localhost:3000/*',
-    'http://192.168.10.113:3000/*',
-    'http://172.26.16.1:3000/*',
+    'http://localhost:6080/*',
+    'http://localhost:6080/auth/callback',
+    'http://localhost:6080/auth/silent-renew',
+    'http://192.168.10.113:6080/*',
+    'http://172.26.16.1:6080/*',
 ]
 ADD_ORIGINS = [
-    'http://localhost:3000',
-    'http://192.168.10.113:3000',
-    'http://172.26.16.1:3000',
+    'http://localhost:6080',
+    'http://192.168.10.113:6080',
+    'http://172.26.16.1:6080',
 ]
 
 
